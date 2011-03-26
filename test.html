@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test page</title>
+	<link rel="stylesheet" href="cvl.css"/>
+	<script 
+		type="text/javascript"
+		src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.js">
+	</script>
+	<script type="text/javascript" src="cvl.js"></script>
+	<script type="text/javascript">
+	jQuery(document).ready(function () {
+		jQuery.fn.jColumnListView({
+			id:           'cl1',
+			columnWidth:  150,
+			columnHeight: 200,
+			columnMargin: 8,
+			paramName:    'columnview',
+			columnNum:    4,
+			appendToId:   't1',
+			elementId:    'categories',
+			removeAfter:  false
+		});
+		jQuery.fn.jColumnListView({
+			id:           'cl2',
+			columnWidth:  120,
+			columnHeight: 180,
+			columnMargin: 5,
+			paramName:    'cview',
+			columnNum:    3,
+			appendToId:   't2',
+			elementId:    'categories',
+			removeAfter:  true,
+			showLabels:   false
+		});
+	});
+	</script>
+</head>
+<body>
+
+<p>Column List 1 with labels</p>
+<div id="t1" style="width: 550px"></div>
+<p>Column list 2 without labels</p>
+<div id="t2" style="width: 550px"></div>
+
+<ul id="categories" style="display: none">
+	<li>CPU
+		<ul>
+		<li>Intel
+			<ul>
+			<li>Core 2 Duo</li>
+			<li>Core 2 Quad</li>
+			<li>Core i3</li>
+			<li>Core i5</li>
+			<li>Core i7</li>
+			</ul>
+		</li>
+		<li>AMD
+			<ul>
+			<li>Sempron</li>
+			<li>Athlon</li>
+			<li>Athlon FX</li>
+			<li>Athlon X2</li>
+			<li>Athlon II X2</li>
+			</ul>
+		</li>
+		<li>VIA
+			<ul>
+			<li>Nano X2</li>
+			<li>Eden X2</li>
+			<li>PV530</li>
+			<li>C7-V</li>
+			</ul>
+		</li>
+		</ul>
+	</li>
+	<li>Motherboards
+		<ul>
+		<li>ASUS
+			<ul>
+			<li>P7P55</li>
+			<li>P8P67</li>
+			<li>M4A78</li>
+			<li>M4A77</li>
+			<li>P4P55</li>
+			<li>P4P67</li>
+			<li>M3A78</li>
+			<li>M3A77</li>
+			<li>P1P55</li>
+			<li>P1P67</li>
+			<li>M2A78</li>
+			<li>M2A77</li>
+			</ul>
+		</li>
+		<li>MSI
+			<ul>
+			<li>P55-GD80</li>
+			<li>P55M-GD45</li>
+			<li>GF615M-P33</li>
+			</ul>
+		</li>
+		</ul>
+	</li>
+	<li>Coolers
+		<ul>
+		<li>CoolerMaster 1</li>
+		<li>Zalman 2</li>
+		<li>Zalman 3</li>
+		</ul>
+	</li>
+</ul>
+</body>
+</html>

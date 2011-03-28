@@ -768,8 +768,7 @@ jCVL_ColumnSplitter.prototype.setHeight = function (h) {
 
 // Sets mode of modifying
 jCVL_ColumnSplitter.prototype.setLeftMode = function (lm) {
-	if (this.opts.leftMode = !!lm) // set mode and change doRight
-		this.opts.doRight  = false;
+	this.opts.doRight  = !(this.opts.leftMode = !!lm); // set mode and change doRight
 }
 
 // Sets doLeft/doRight

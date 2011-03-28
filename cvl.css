@@ -151,6 +151,23 @@
 }
 
 /*
+ * Column Separator
+ */
+.cvl-column-splitter
+{
+	float: left;
+	margin: 0 2px;
+	background-color: #777;
+	min-width: 3px;
+	cursor: col-resize;
+}
+
+.cvl-column-splitter-active
+{
+	background-color: #999 !important;
+}
+
+/*
  * Column List
  */
 

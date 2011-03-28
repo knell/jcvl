@@ -3,14 +3,21 @@
 <head>
 	<title>Test page</title>
 	<link rel="stylesheet" href="cvl.css"/>
+	<style type="text/css">
+	body {
+		font-family: Verdana;
+		font-size: 12pt;
+	}
+	</style>
 	<script 
 		type="text/javascript"
 		src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.js">
 	</script>
 	<script type="text/javascript" src="cvl.js"></script>
 	<script type="text/javascript">
+	var cl;
 	jQuery(document).ready(function () {
-		jQuery.fn.jColumnListView({
+		cl = jQuery.fn.jColumnListView({
 			id:           'cl1',
 			columnWidth:  150,
 			columnHeight: 200,
@@ -19,7 +26,10 @@
 			columnNum:    4,
 			appendToId:   't1',
 			elementId:    'categories',
-			removeAfter:  false
+			removeAfter:  false,
+			columnMinWidth: 120,
+			columnMaxWidth: 200,
+			separatorLeftMode: false
 		});
 		jQuery.fn.jColumnListView({
 			id:           'cl2',
@@ -31,15 +41,25 @@
 			appendToId:   't2',
 			elementId:    'categories',
 			removeAfter:  true,
-			showLabels:   false
+			showLabels:   false,
+			useSplitters: false
+		});
+		
+		$('#t1-lmode').change(function () {
+			cl.getColumnList().setSplitterLeftMode($('#t1-lmode').is(':checked'));
 		});
 	});
 	</script>
 </head>
 <body>
 
-<p>Column List 1 with labels</p>
-<div id="t1" style="width: 550px"></div>
+<p>Column List 1 with splitters</p>
+<div id="t1" style="width: 600px; height: 260px; overflow-x: auto; overflow-y: hidden"></div>
+<p>
+Set Left Mode: <input type="checkbox" id="t1-lmode"/> (Modify only left column)
+</p>
+
+<hr/>
 <p>Column list 2 without labels</p>
 <div id="t2" style="width: 550px"></div>
 

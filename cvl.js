@@ -2,12 +2,16 @@
  * jColumnListView
  *
  * Creates a column view (like a Mac Finder) from <UL> list. Supports multiselect.
+ * Since v0.2 can provide splitters between columns.
  *
  * Requires jQuery 1.4+
  * See cvl.css for CSS rules
  *
  * Control creates <input> element for each checked item with the same 
  * name (paramName[] for PHP, for example)
+ *
+ * jColumnListView() returns jCVL_ColumnListView object which is native list view. 
+ * See comments below to operate on this object directly.
  *
  * Parameters:
  *   id            - ID of ColumnListView control
@@ -20,6 +24,12 @@
  *   appendToId    - ID of element to append this control
  *   removeULAfter - if true remove <UL> list from DOM after get data
  *   showLabels    - show or not labels area
+ *
+ * Parameters v0.2:
+ *   useSplitters     - If true ColumnListView will use splitters for columns
+ *   columnMinWidth   - 
+ *   columnMaxWidth   - Min/Max values for width (used as constraints for splitters)
+ *   splitterLeftMode - If true splitter will modify only left column (both column width otherwise)
  *
  * Usage example:
  * 
@@ -34,14 +44,27 @@
  *			elementId:     'categories',
  *			removeULAfter: true,
  *			showLabels:    false
+ * // Since version 0.2
+ *          useSplitters:     true,
+ *          splitterLeftMode: false,
+ *          columnMinWidth:   90,
+ *          columnMaxWidth:   180
  *		});
  *
  * Author:  Alexander Khizha <khizhaster@gmail.com>
- * Version: 0.1.2
- * Date:    23.03.2011
+ * Version: 0.2.0
+ * Date:    29.03.2011
  * License: GPL v2.0
  */
 
+function CVL_AdjustMinMax(val, min, max)
+{
+	return val <= min 
+		? min
+		: val >= max
+			? max
+			: val;
+}
 
 // -----------------------------------------------------------------------------
 // Jaws (labels like [x|Some Label])
@@ -416,15 +439,20 @@ function jCVL_Column(opts)
 {
 	var emptyHandler = function (ev, index, item) {};
 
-	this.opts = {
-		id:         opts.id        || 'cvl-column',
-		width:      opts.width     || 250,
-		height:     opts.height    || 200,
-		margin:     opts.margin    || 10,
-		parentItem: opts.parent    || undefined,
-		onClick:    opts.onClick   || emptyHandler,
-		onCheckboxClick: opts.onCheckboxClick || emptyHandler
+	var defOpts = {
+		id:         'cvl-column',
+		maxWidth:   250,
+		minWidth:   150,
+		width:      200,
+		height:     200,
+		margin:     10,
+		parentItem: null,
+		onClick:         emptyHandler,
+		onCheckboxClick: emptyHandler
 	};
+	this.opts          = jQuery.extend(defOpts, opts);
+	this.opts.width    = CVL_AdjustMinMax(this.opts.width, this.opts.minWidt, this.opts.maxWidth);
+	this.opts.defWidth = this.opts.width;
 
 	this.id              = this.opts.id;
 	this.data            = [];
@@ -619,6 +647,7 @@ jCVL_Column.prototype.getSimpleMode = function () {
 
 // Hides column (if !simple - with animation)
 jCVL_Column.prototype.hide = function (cb) {
+	this.setWidth(this.opts.defWidth);
 	if (!!this.simpleMode)
 	{
 		this.elem.hide();
@@ -631,6 +660,7 @@ jCVL_Column.prototype.hide = function (cb) {
 
 // Shows column
 jCVL_Column.prototype.show = function (cb) {
+	// reset width
 	if (!!this.simpleMode)
 	{
 		this.elem.show();
@@ -648,23 +678,216 @@ jCVL_Column.prototype.checkAll = function (bCheck) {
 	});
 }
 
+// Sets/Gets width
+jCVL_Column.prototype.getWidth = function () {
+	return this.opts.width;
+}
+
+jCVL_Column.prototype.getMinWidth = function () {
+	return this.opts.minWidth;
+}
+
+jCVL_Column.prototype.getMaxWidth = function () {
+	return this.opts.maxWidth;
+}
+
+jCVL_Column.prototype.setWidth = function (w) {
+	var width = parseInt(w);
+	this.opts.width = CVL_AdjustMinMax(width, this.opts.minWidth, this.opts.maxWidth);
+	this.elem.css({ width: this.opts.width });
+}
+
+
+// -----------------------------------------------------------------------------
+// ColumnSplitter
+//
+function jCVL_ColumnSplitter(opts)
+{
+	var defOpts = {
+		width:    4,
+		height:   200,
+		doLeft:   false,
+		doRight:  false,
+		// modify only left column
+		leftMode: false,
+		leftCol:  null,
+		rightCol: null,
+		parent:   null
+	};
+	this.opts = jQuery.extend(defOpts, opts);
+	
+	this.elem = $('<div>')
+		.attr('class', 'cvl-column-splitter')
+		.css({ width: this.opts.width, height: this.opts.height });
+
+	if (this.opts.parent)
+	{
+		this.parentEl = $(this.opts.parent.get());
+		if (this.opts.leftCol || this.opts.rightCol)
+		{
+			this.opts.doLeft  = !!this.opts.leftCol;
+			this.opts.doRight = !this.leftMode && !!this.opts.rightCol;
+			this._bindMouseDown();
+		}
+	}
+
+	this.lastPos = 0;
+	this.pressed = false;
+}
+
+// Returns html element itself
+jCVL_ColumnSplitter.prototype.get = function () {
+	return this.elem;
+}
+
+// Appends element to given one
+jCVL_ColumnSplitter.prototype.appendTo = function (elem) {
+	if ($(elem).length != 0)
+		$(elem).append(this.elem);
+}
+
+// Set height equal to left column heigh
+jCVL_ColumnSplitter.prototype.adjustHeight = function () {
+	this.elem.height($(this.opts.leftCol.get()).outerHeight());
+}
+
+// Show/hide
+jCVL_ColumnSplitter.prototype.show = function () {
+	this.elem.show();
+	this.adjustHeight();
+}
+
+jCVL_ColumnSplitter.prototype.hide = function () {
+	this.elem.hide();
+}
+
+// Sets height of element
+jCVL_ColumnSplitter.prototype.setHeight = function (h) {
+	this.elem.height(h);
+}
+
+// Sets mode of modifying
+jCVL_ColumnSplitter.prototype.setLeftMode = function (lm) {
+	if (this.opts.leftMode = !!lm) // set mode and change doRight
+		this.opts.doRight  = false;
+}
+
+// Sets doLeft/doRight
+jCVL_ColumnSplitter.prototype.setDoLeft = function (d) {
+	this.opts.doLeft = !!d;
+}
+
+jCVL_ColumnSplitter.prototype.setDoRight = function (d) {
+	this.opts.doRight = !!d;
+}
+
+jCVL_ColumnSplitter.prototype.setLeftColumn = function (col) {
+	this.opts.leftCol = col;
+	this.opts.doLeft  = !!this.opts.leftCol;
+}
+
+jCVL_ColumnSplitter.prototype.setRightColumn = function (col) {
+	this.opts.rightCol = col;
+	this.opts.doRight  = !this.opts.leftMode && !!this.opts.rightCol;
+}
+
+jCVL_ColumnSplitter.prototype._bindMouseDown = function () {
+	var that = this;
+	this.elem.mousedown(function (event) { that.onMouseDown(event); });
+}
+
+jCVL_ColumnSplitter.prototype._bindMouseEvents = function () {
+	var that = this;
+	this.elem.addClass('cvl-column-splitter-active');
+	this.parentEl
+		.bind('mousemove',  function (event) { that.onMouseMove(event); })
+		.bind('mouseleave', function (event) { that.onMouseUpOut(event); })
+		.bind('mouseup',    function (event) { that.onMouseUpOut(event); });
+}
+
+jCVL_ColumnSplitter.prototype._unbindMouseEvents = function () {
+	var that = this;
+	this.elem.removeClass('cvl-column-splitter-active');
+	this.parentEl
+		.unbind('mousemove',  function (event) { that.onMouseMove(event); })
+		.unbind('mouseleave', function (event) { that.onMouseUpOut(event); })
+		.unbind('mouseup',    function (event) { that.onMouseUpOut(event); });
+}
+
+// Mouse handlers
+jCVL_ColumnSplitter.prototype.onMouseDown = function (ev) {
+	ev.stopPropagation();
+	ev.preventDefault();
+	this.pressed = true;
+	this.lastPos = ev.pageX;
+	this._bindMouseEvents();
+}
+
+// Changes size of columns depends on the parameters
+jCVL_ColumnSplitter.prototype.onMouseMove = function (ev) {
+	if (this.pressed)
+	{
+		// get direction
+		var pos       = ev.pageX;
+		var delta     = Math.abs(this.lastPos - pos);
+		var lColWidth = this.opts.leftCol.getWidth();
+		var rColWidth = this.opts.rightCol.getWidth();
+	
+		// to left
+		if (pos < this.lastPos)
+		{
+			if (this.opts.doLeft  && lColWidth - delta >= this.opts.leftCol.getMinWidth())
+			{
+				this.opts.leftCol.setWidth(lColWidth  - delta);
+				// Change right size only if left has been changed
+				if (this.opts.doRight && rColWidth + delta <= this.opts.rightCol.getMaxWidth())
+					this.opts.rightCol.setWidth(rColWidth + delta);
+			}
+		}
+		// to right
+		else if (pos > this.lastPos)
+		{
+			if (this.opts.doLeft  && lColWidth + delta <= this.opts.leftCol.getMaxWidth())
+			{
+				this.opts.leftCol.setWidth(lColWidth  + delta);
+				// Change left size only if right has been changed
+				if (this.opts.doRight && rColWidth - delta >= this.opts.rightCol.getMinWidth())
+					this.opts.rightCol.setWidth(rColWidth - delta);
+			}
+		}
+		
+		this.lastPos = pos;
+	}
+}
+
+jCVL_ColumnSplitter.prototype.onMouseUpOut = function (ev) {
+	this.pressed = false;
+	this._unbindMouseEvents();
+}
+
+
 // -----------------------------------------------------------------------------
 // ColumnList
 //
 function jCVL_ColumnList (opts)
 {
 	var defOpts = {
-		columnWidth:  150,
-		height:       200,
-		columnMargin: 10,
-		columnNum:    3,
-		id:           '',
-		data:         [],
-		onClick:      function () {},
-		onCheckboxClick: function () {}
+		columnWidth:      150,
+		height:           200,
+		columnMargin:     10,
+		columnNum:        3,
+		columnMinWidth:   150,
+		columnMaxWidth:   250,
+		id:               '',
+		data:             [],
+		useSplitters:     true,
+		splitterLeftMode: false,
+		onClick:          function () {},
+		onCheckboxClick:  function () {}
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	this.cols = [];
+	this.spls = [];
 	this.data = this.opts.data;
 	
 	this.elem = $('<div>')
@@ -691,13 +914,17 @@ jCVL_ColumnList.prototype.getColumn = function (index) {
 
 jCVL_ColumnList.prototype._createColumns = function () {
 	var that = this;
+	var colMargin = this.opts.useSplitters ? 0 : this.opts.columnMargin;
+
 	for (var i=0; i<this.opts.columnNum; i++)
 	{
 		var colId = this.opts.id + '-col' + i;
 		var col = new jCVL_Column({
 			width:     this.opts.columnWidth,
 			height:    this.opts.height,
-			margin:    this.opts.columnMargin,
+			margin:    colMargin,
+			minWidth:  this.opts.columnMinWidth,
+			maxWidth:  this.opts.columnMaxWidth,
 			id:        colId,
 			onClick:  (function (colIndex) { return function (ev, index, item) { 
 				that.onColumnItemClick(ev, colIndex, index, item); }; })(i),
@@ -712,7 +939,37 @@ jCVL_ColumnList.prototype._createColumns = function () {
 			col.setData(this.data);
 		this.cols.push(col);
 		col.setSimpleMode(false);
+
+		if (this.opts.useSplitters)
+		{
+			var leftCol  = col;
+			var rightCol = i > 0 ? this.cols[i - 1] : null;
+			var spl = new jCVL_ColumnSplitter({
+				width:    4,
+				height:   this.opts.height,
+				leftCol:  leftCol,
+				rightCol: rightCol,
+				parent:   this,
+				leftMode: this.opts.splitterLeftMode
+			});
+			spl.appendTo(this.elem);
+			this.spls.push(spl);
+			
+			// Setup right column for previous splitter
+			if (i > 0)
+			{
+				spl.hide(); // hide separators except first
+				this.spls[i - 1].setRightColumn(leftCol);
+			}
+		}
 	}
+}
+
+// Resize elements if needed
+jCVL_ColumnList.prototype.adjustElements = function () {
+	if (this.opts.useSplitters)
+		for (var i = 0; i < this.spls.length; i++)
+			this.spls[i].adjustHeight();
 }
 
 jCVL_ColumnList.prototype.clear = function () {
@@ -732,6 +989,8 @@ jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex,
 				col.setSimpleMode(true);
 				col.hide();
 				col.setSimpleMode(m);
+				if (this.opts.useSplitters)
+					this.spls[index - 1].hide();
 			}
 		});
 		
@@ -744,6 +1003,8 @@ jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex,
 				nextCol.setParentItem(item);
 				that.opts.onClick(ev, colIndex, itemIndex, item);
 			});
+			if (this.opts.useSplitters)
+				this.spls[colIndex + 1].show();
 			bEx = false;
 		}
 	}
@@ -752,6 +1013,7 @@ jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex,
 		this.opts.onClick(ev, colIndex, itemIndex, item);
 }
 
+// Fire item's onClick event
 jCVL_ColumnList.prototype.fireColumnItemClick = function (colIndex, itemIndex)
 {
 	if (colIndex >= 0 && colIndex < this.cols.length)
@@ -762,6 +1024,7 @@ jCVL_ColumnList.prototype.fireColumnItemClick = function (colIndex, itemIndex)
 	}
 }
 
+// Sets/Gets data
 jCVL_ColumnList.prototype.setData = function (data) {
 	this.clear();
 	this.data = data;
@@ -797,21 +1060,31 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 }
 
 
+jCVL_ColumnList.prototype.setSplitterLeftMode = function (lMode) {
+	jQuery.each(this.spls, function (index, item) {
+		item.setLeftMode(!!lMode);
+	});
+}
+
 // -----------------------------------------------------------------------------
 // Column List View
 //
 function jCVL_ColumnListView(opts) 
 {
 	var defOpts = {
-		id:              'col-list-view',
-		columnWidth:     150,
-		columnHeight:    200,
-		columnMargin:    10,
-		columnNum:       3,
-		paramName:       'columnview[]',
-		elementId:       '',
-		removeULAfter:   false,
-		showLabels:      true
+		id:               'col-list-view',
+		columnWidth:      150,
+		columnHeight:     200,
+		columnMargin:     10,
+		columnNum:        3,
+		columnMinWidth:   150,
+		columnMaxWidth:   250,
+		useSplitters:     true,
+		splitterLeftMode: false,
+		paramName:        'columnview[]',
+		elementId:        '',
+		removeULAfter:    false,
+		showLabels:       true
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -819,15 +1092,14 @@ function jCVL_ColumnListView(opts)
 	this.elem = $('<div>')
 		.attr('id', this.opts.id)
 		.attr('class', 'cvl-column-list-view');
-	this.list = new jCVL_ColumnList({
-		id:           this.opts.id + '-column-list',
-		columnWidth:  this.opts.columnWidth,
-		height:       this.opts.columnHeight,
-		columnMargin: this.opts.columnMargin,
-		columnNum:    this.opts.columnNum,
-		onClick:      function (ev, ci, ii, it) { that.onColumnItemClick(ev, ci, ii, it); },
-		onCheckboxClick: function (ev, ci, ii, it) { that.onColumnItemCheckboxClick(ev, ci, ii, it); }
-	});
+	
+	var listOpts = this.opts;
+	listOpts.id              = this.opts.id + '-column-list';
+	listOpts.onClick         = function (ev, ci, ii, it) { that.onColumnItemClick(ev, ci, ii, it); };
+	listOpts.onCheckboxClick = function (ev, ci, ii, it) { that.onColumnItemCheckboxClick(ev, ci, ii, it); };
+	listOpts.height          = this.opts.columnHeight;
+	this.list = new jCVL_ColumnList(listOpts);
+	
 	this.jaws = new jCVL_JawArea({
 		id:          this.opts.id + '-jaws-area',
 		unique:      true,
@@ -855,7 +1127,20 @@ jCVL_ColumnListView.prototype.get = function () {
 // Appends element to given one
 jCVL_ColumnListView.prototype.appendTo = function (elem) {
 	if ($(elem).length != 0)
+	{
 		$(elem).append(this.elem);
+		this.list.adjustElements();
+	}
+}
+
+// Calls children's adjustElement() function
+jCVL_ColumnListView.prototype.adjustElements = function () {
+	this.list.adjustElements();
+}
+
+// Returns jCVL_ColumnList object
+jCVL_ColumnListView.prototype.getColumnList = function () {
+	return this.list;
 }
 
 // Set up list view from data list stoted in <UL> on page
@@ -1048,22 +1333,31 @@ jCVL_ColumnListView.prototype.onJawNameClick = function (event, id, text) {
  */
 jQuery.fn.jColumnListView = function (options) {
 	var defOpts = {
-		id:              'col-list-view',
-		columnWidth:     150,
-		columnHeight:    200,
-		columnMargin:    10,
-		columnNum:       3,
-		paramName:       'columnview',
-		elementId:       '',
-		appendToId:      '',
-		removeULAfter:   false,
-		showLabels:      true
+		id:               'col-list-view',
+		columnWidth:      150,
+		columnHeight:     200,
+		columnMargin:     10,
+		columnNum:        3,
+		columnMinWidth:   150,
+		columnMaxWidth:   250,
+		useSplitters:     true,
+		splitterLeftMode: false,
+		paramName:        'columnview',
+		elementId:        '',
+		appendToId:       '',
+		removeULAfter:    false,
+		showLabels:       true
 	};
 	var opts = $.extend(defOpts, options);
 
 	this.cvl = new jCVL_ColumnListView(opts);
 	if (opts.appendToId != '')
+	{
 		this.cvl.appendTo($('#' + opts.appendToId));
+		this.cvl.adjustElements();
+	}
+	
+	return this.cvl;
 };
 
 // Returns ColumnListView object

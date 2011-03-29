@@ -5,8 +5,7 @@
 /* Label element */
 .cvl-selected-jaw
 {
-	display: inline-block;
-	padding: 2px;
+	padding: 4px 2px;
 	margin: 2px;
 	background-color: #1F75A8;
 	border: 1px solid #1F75A8;
@@ -15,6 +14,7 @@
 	-webkit-border-radius: 4px;
 	-o-border-radius: 4px;
 	-ms-border-radius: 4px;
+	float: left;
 }
 
 .cvl-selected-jaw:hover
@@ -29,14 +29,13 @@
 /* Label Del element (x) */
 .cvl-selected-jaw .cvl-selected-del
 {
-	display: inline-block;
+	float: left;
 	color: #ffffff;
 	font-weight: bold;
 	font-family: Verdana;
 	font-size: 11px;
 	width: 14px;
-	padding: 1px 0 2px 0;
-	line-height: 12px;;
+	padding: 1px 0;
 	margin: 0;
 	margin-right: 2px;
 	border-right: 1px solid #ffffff;
@@ -47,7 +46,7 @@
 /* Label text */
 .cvl-selected-jaw .cvl-selected-name
 {
-	display: inline-block;
+	float: left;
 	padding: 0 4px 0 2px;
 	margin: 0;
 	color: #ffffff;
@@ -64,13 +63,14 @@
 .cvl-jaw-area
 {
 	border: 1px solid #1F75A8;
-	padding: 4px;
+	padding: 2px;
 	background-color: #ffffff;
 	border-radius:         5px;
 	-moz-border-radius:    5px;
 	-webkit-border-radius: 5px;
 	-o-border-radius:      5px;
 	-ms-border-radius:     5px;
+	overflow: hidden;
 }
 
 /*
@@ -112,8 +112,9 @@
 .cvl-column-item .cvl-column-item-checkbox-box
 {
 	width: 14px;
-	height: 14px;
+	height: 12px;
 	margin: 0px;
+	padding: 2px 0;
 	float: left;
 }
 
@@ -122,6 +123,7 @@
 {
 	margin: 0;
 	padding: 0;
+	float: left;
 }
 
 /* Column item's label */

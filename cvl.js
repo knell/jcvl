@@ -768,7 +768,7 @@ jCVL_ColumnSplitter.prototype.setHeight = function (h) {
 
 // Sets mode of modifying
 jCVL_ColumnSplitter.prototype.setLeftMode = function (lm) {
-	this.opts.doRight  = !(this.opts.leftMode = !!lm); // set mode and change doRight
+	this.opts.doRight  = !(this.opts.leftMode = !!lm) && this.opts.rightCol; // set mode and change doRight
 }
 
 // Sets doLeft/doRight
@@ -797,7 +797,7 @@ jCVL_ColumnSplitter.prototype._bindMouseDown = function () {
 
 jCVL_ColumnSplitter.prototype._bindMouseEvents = function () {
 	var that = this;
-	this.elem.addClass('cvl-column-splitter-active');
+	this.elem.addClass('cvl-column-splitter-active');
 	this.parentEl
 		.bind('mousemove',  function (event) { that.onMouseMove(event); })
 		.bind('mouseleave', function (event) { that.onMouseUpOut(event); })
@@ -988,8 +988,8 @@ jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex,
 				col.setSimpleMode(true);
 				col.hide();
 				col.setSimpleMode(m);
-				if (this.opts.useSplitters)
-					this.spls[index - 1].hide();
+				if (that.opts.useSplitters)
+					that.spls[index].hide();
 			}
 		});
 		

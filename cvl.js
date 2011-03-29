@@ -31,6 +31,9 @@
  *   columnMaxWidth   - Min/Max values for width (used as constraints for splitters)
  *   splitterLeftMode - If true splitter will modify only left column (both column width otherwise)
  *
+ * Parameters v0.2.4
+ *   singleCheck      - only one item can be checked
+ *
  * Usage example:
  * 
  *		jQuery.fn.jColumnListView({
@@ -49,6 +52,8 @@
  *          splitterLeftMode: false,
  *          columnMinWidth:   90,
  *          columnMaxWidth:   180
+ * // Since version 0.2.4
+ *          singleCheck:      false
  *		});
  *
  * Author:  Alexander Khizha <khizhaster@gmail.com>
@@ -155,6 +160,10 @@ jCVL_Jaw.prototype.appendTo = function (elem) {
 jCVL_Jaw.prototype.remove = function (cb) {
 	var that = this;
 	this.elems.elem.fadeOut(200, function () { that.get().remove(); if (cb) cb(); });
+}
+
+jCVL_Jaw.prototype._remove = function (cb) {
+	this.get().remove();
 }
 
 // -----------------------------------------------------------------------------
@@ -279,6 +288,13 @@ jCVL_JawArea.prototype.hide = function () {
 
 jCVL_JawArea.prototype.show = function () {
 	this.elem.show();
+}
+
+jCVL_JawArea.prototype.clear = function () {
+	jQuery.each(this.jaws, function (index, jaw) {
+		jaw._remove();
+	});
+	this.jaws = [];
 }
 
 // -----------------------------------------------------------------------------
@@ -976,7 +992,6 @@ jCVL_ColumnList.prototype.clear = function () {
 }
 
 jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex, item) {
-	// console.log('Click: colIndex: ' + colIndex + ', itemIndex: ' + itemIndex + ' - ' + item.getText());
 	var that = this;
 	var bEx = true;
 	if (colIndex < this.cols.length - 1)
@@ -1034,6 +1049,7 @@ jCVL_ColumnList.prototype.getData = function () {
 	return this.data;
 }
 
+// Checks all items in path to root or remove checks at all children
 jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, itemIndex, item) {
 	if (item.isChecked())
 	{
@@ -1062,6 +1078,12 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 jCVL_ColumnList.prototype.setSplitterLeftMode = function (lMode) {
 	jQuery.each(this.spls, function (index, item) {
 		item.setLeftMode(!!lMode);
+	});
+}
+
+jCVL_ColumnList.prototype.checkAll = function (bCheck) {
+	jQuery.each(this.cols, function (index, col) {
+		col.checkAll(!!bCheck);
 	});
 }
 
@@ -1142,6 +1164,14 @@ jCVL_ColumnListView.prototype.getColumnList = function () {
 	return this.list;
 }
 
+jCVL_ColumnListView.prototype._clear = function () {
+	this.list._clear();
+}
+
+jCVL_ColumnListView.prototype.setSingleCheck = function (bMode) {
+	this.opts.singleCheck = !!bMode;
+}
+
 // Set up list view from data list stoted in <UL> on page
 jCVL_ColumnListView.prototype.setFromElement = function (elem_id, bRemoveListAfter) {
 	var ul = typeof(elem_id) == 'string' ? $('#' + elem_id) : $(elem_id);
@@ -1206,10 +1236,22 @@ jCVL_ColumnListView.prototype.onColumnItemClick = function (event, colIndex, ite
 	}
 }
 
+// Updates labels depends on new selected items
 jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIndex, itemIndex, item) {
 	var that = this;
 	if (item.isChecked())
 	{
+		if (this.opts.singleCheck)
+		{
+			// Leave only current checked item
+			this.uncheckAll();
+			var it = item;
+			while (it)
+			{
+				it.setChecked(true);
+				it = it.getParentColumn().getParentItem();
+			}
+		}
 		// Get path to root column
 		var path = this.list.getColumn(colIndex).getFullPath(itemIndex);
 		// Store labels and update jaws
@@ -1322,6 +1364,7 @@ jCVL_ColumnListView.prototype.onJawNameClick = function (event, id, text) {
 		this._selectColumnItemByPath(0, ptc);
 }
 
+// Sets given items checked
 jCVL_ColumnListView.prototype.setValues = function (vals) {
 	var that = this;
 	var data = this.list.getData();
@@ -1336,6 +1379,12 @@ jCVL_ColumnListView.prototype.setValues = function (vals) {
 				that.list.onColumnItemCheckboxClick(null, col, itm, item);
 			});
 	});
+}
+
+jCVL_ColumnListView.prototype.uncheckAll = function () {
+	this.list.checkAll(false);
+	this.jaws.clear();
+	this.labels = {};
 }
 
 
@@ -1360,7 +1409,8 @@ jQuery.fn.jColumnListView = function (options) {
 		elementId:        '',
 		appendToId:       '',
 		removeULAfter:    false,
-		showLabels:       true
+		showLabels:       true,
+		singleCheck:      false
 	};
 	var opts = $.extend(defOpts, options);
 

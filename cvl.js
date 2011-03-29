@@ -1312,7 +1312,6 @@ jCVL_ColumnListView.prototype.onJawDelClick = function (event, id, text) {
 		this._selectColumnItemByPath(0, ptc, function () {
 			var item = that.list.getColumn(col).getItem(itm);
 			item.setChecked(false);
-			// item.fireOnCheckboxClick();
 			that.list.onColumnItemCheckboxClick(null, col, itm, item);
 		});
 }
@@ -1321,6 +1320,22 @@ jCVL_ColumnListView.prototype.onJawNameClick = function (event, id, text) {
 	var ptc = this._findListItemPath(this.list.getData(), text);
 	if (ptc.length)
 		this._selectColumnItemByPath(0, ptc);
+}
+
+jCVL_ColumnListView.prototype.setValues = function (vals) {
+	var that = this;
+	var data = this.list.getData();
+	jQuery.each(vals, function (index, val) {
+		var path = that._findListItemPath(data, val);
+		var col  = path.length - 1;
+		var itm  = path[path.length - 1];
+		if (path.length)
+			that._selectColumnItemByPath(0, path, function () {
+				var item = that.list.getColumn(col).getItem(itm);
+				item.setChecked(true);
+				that.list.onColumnItemCheckboxClick(null, col, itm, item);
+			});
+	});
 }
 
 

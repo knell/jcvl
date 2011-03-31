@@ -878,29 +878,40 @@ jCVL_ColumnSplitter.prototype.onMouseMove = function (ev) {
 		var delta     = Math.abs(this.lastPos - pos);
 		var lColWidth = this.opts.leftCol.getWidth();
 		var rColWidth = this.opts.rightCol.getWidth();
+		var lNew = lColWidth, rNew = rColWidth;
 	
 		// to left
 		if (pos < this.lastPos)
 		{
-			if (this.opts.doLeft  && lColWidth - delta >= this.opts.leftCol.getMinWidth())
+			if (this.opts.doLeft && lColWidth - delta >= this.opts.leftCol.getMinWidth())
 			{
-				this.opts.leftCol.setWidth(lColWidth  - delta);
+				// this.opts.leftCol.setWidth(lColWidth - delta);
+				lNew = lColWidth - delta;
 				// Change right size only if left has been changed
 				if (this.opts.doRight && rColWidth + delta <= this.opts.rightCol.getMaxWidth())
-					this.opts.rightCol.setWidth(rColWidth + delta);
+					// this.opts.rightCol.setWidth(rColWidth + delta);
+					rNew = rColWidth + delta;
 			}
 		}
 		// to right
 		else if (pos > this.lastPos)
 		{
-			if (this.opts.doLeft  && lColWidth + delta <= this.opts.leftCol.getMaxWidth())
+			if (this.opts.doLeft && lColWidth + delta <= this.opts.leftCol.getMaxWidth())
 			{
-				this.opts.leftCol.setWidth(lColWidth  + delta);
+				// this.opts.leftCol.setWidth(lColWidth + delta);
+				lNew = lColWidth + delta;
 				// Change left size only if right has been changed
 				if (this.opts.doRight && rColWidth - delta >= this.opts.rightCol.getMinWidth())
-					this.opts.rightCol.setWidth(rColWidth - delta);
+					// this.opts.rightCol.setWidth(rColWidth - delta);
+					rNew = rColWidth - delta;
 			}
 		}
+		
+		var parentWidth = this.opts.parent._calculateWidth();
+		parentWidth += lNew - lColWidth + rNew - rColWidth;
+		this.opts.parent._updateWidth(parentWidth);
+		this.opts.leftCol.setWidth(lNew);
+		this.opts.rightCol.setWidth(rNew)
 		
 		this.lastPos = pos;
 	}

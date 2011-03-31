@@ -1186,7 +1186,7 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 		// Call before
 		this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
 
-		if (item == this.getColumn(colIndex).getSelectedImte())
+		if (item == this.getColumn(colIndex).getSelectedItem())
 			for (var i=colIndex+1; i<this.cols.length; i++)
 				this.cols[i].checkAll(false);
 	}

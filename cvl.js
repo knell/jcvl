@@ -885,11 +885,9 @@ jCVL_ColumnSplitter.prototype.onMouseMove = function (ev) {
 		{
 			if (this.opts.doLeft && lColWidth - delta >= this.opts.leftCol.getMinWidth())
 			{
-				// this.opts.leftCol.setWidth(lColWidth - delta);
 				lNew = lColWidth - delta;
 				// Change right size only if left has been changed
 				if (this.opts.doRight && rColWidth + delta <= this.opts.rightCol.getMaxWidth())
-					// this.opts.rightCol.setWidth(rColWidth + delta);
 					rNew = rColWidth + delta;
 			}
 		}
@@ -898,17 +896,16 @@ jCVL_ColumnSplitter.prototype.onMouseMove = function (ev) {
 		{
 			if (this.opts.doLeft && lColWidth + delta <= this.opts.leftCol.getMaxWidth())
 			{
-				// this.opts.leftCol.setWidth(lColWidth + delta);
 				lNew = lColWidth + delta;
 				// Change left size only if right has been changed
 				if (this.opts.doRight && rColWidth - delta >= this.opts.rightCol.getMinWidth())
-					// this.opts.rightCol.setWidth(rColWidth - delta);
 					rNew = rColWidth - delta;
 			}
 		}
 		
-		var parentWidth = this.opts.parent._calculateWidth();
-		parentWidth += lNew - lColWidth + rNew - rColWidth;
+		var parentWidth  = this.opts.parent._calculateWidth();
+		parentWidth     += lNew - lColWidth + rNew - rColWidth;
+
 		this.opts.parent._updateWidth(parentWidth);
 		this.opts.leftCol.setWidth(lNew);
 		this.opts.rightCol.setWidth(rNew)
@@ -1189,8 +1186,9 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 		// Call before
 		this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
 
-		for (var i=colIndex+1; i<this.cols.length; i++)
-			this.cols[i].checkAll(false);
+		if (item == this.getColumn(colIndex).getSelectedImte())
+			for (var i=colIndex+1; i<this.cols.length; i++)
+				this.cols[i].checkAll(false);
 	}
 }
 
@@ -1207,6 +1205,7 @@ jCVL_ColumnList.prototype.checkAll = function (bCheck) {
 	});
 }
 
+// Calculate width of all visilbe elements
 jCVL_ColumnList.prototype._calculateWidth = function () {
 	var w = 0;
 	jQuery.map(jQuery.merge(jQuery.merge([], this.cols), this.spls), function (elem, i) {
@@ -1216,10 +1215,27 @@ jCVL_ColumnList.prototype._calculateWidth = function () {
 	return w;
 }
 
+// Set width of inner element to passed or calculated value 
 jCVL_ColumnList.prototype._updateWidth = function (w) {
 	var width = typeof(w) == "number" ? w : this._calculateWidth();
 	this.elem.width(width);
 }
+
+jCVL_ColumnList.prototype._getDataItemByPath = function (path) {
+	var p;
+	var d = this.data; 
+	while (p = path.shift())
+	{
+		for (var i=0; i<d.length; i++)
+			if (d[i].name == p)
+			{
+				d = d[i].data;
+				break;
+			}
+	}
+	return d;
+}
+
 
 // -----------------------------------------------------------------------------
 // Column List View
@@ -1347,6 +1363,7 @@ jCVL_ColumnListView.prototype._parseData = function (ul_elem, data) {
 	return data;
 }
 
+// Shows next column if exists and update it with selected items
 jCVL_ColumnListView.prototype.onColumnItemClick = function (event, colIndex, itemIndex, item) {
 	var aKeys = function (obj) {
 		var keys = [];
@@ -1380,16 +1397,14 @@ jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIn
 			// Leave only current checked item
 			this.uncheckAll();
 			var it = item;
-			while (it)
-			{
+			for ( ; it; it = it.getParentColumn().getParentItem())
 				it.setChecked(true);
-				it = it.getParentColumn().getParentItem();
-			}
 		}
+		
 		// Get path to root column
-		var path = this.list.getColumn(colIndex).getFullPath(itemIndex);
+		var labs = this.list.getColumn(colIndex).getFullPath(itemIndex).split(',');
 		// Store labels and update jaws
-		jQuery.each(path.split(','), function (index, item) {
+		jQuery.each(labs, function (index, item) {
 			if (typeof(that.labels[item]) == 'undefined')
 			{
 				that.labels[item] = 1;
@@ -1404,34 +1419,31 @@ jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIn
 		// Uncheck current and all checked children items if current item equal to selected
 		var rems = [];
 		
-		if (item == this.list.getColumn(colIndex).getSelectedItem())
-		{
-			// Iterate columns and find checked item's pathes to remove
-			for (var i = colIndex + 1; i < this.opts.columnNum; i++)
-			{
-				var col  = this.list.getColumn(i);
-				var strs = col.getItemsString();
-				jQuery.each(strs, function (index, item) {
-					if (col.getItem(index).isChecked())
-					{
-						var pp = col.getFullPath(index, ',', i, colIndex).split(',');
-						jQuery.merge(rems, pp);
-					}
-				});
-			}
-		}
-
+		// Find current item in data tree
+		var col  = this.list.getColumn(colIndex);
+		var path = col.getFullPath(itemIndex);
+		var data = this.list._getDataItemByPath(path.split(','));
+		
+		// Collect all children items using data hash
+		var getChildren = function (pData, chld) {
+			jQuery.each(pData, function (index, item) {
+				if (item.hasChildren)
+					getChildren(item.data, chld);
+				chld.push(item.name);
+			});
+		};
+		getChildren(data, rems);
+		// Remove current item's label too
+		rems.push(item.getText());
+		
 		// Remove collected items
 		jQuery.each(rems, function (index, item) {
-			if (typeof(that.labels[item]) != 'undefined' && --that.labels[item] <= 0)
+			if (typeof(that.labels[item]) != 'undefined')
 			{
 				that.jaws.delJaw(item);
 				delete that.labels[item];
 			}
 		});
-		// Remove current item
-		that.jaws.delJaw(item.getText());
-		delete that.labels[item.getText()];
 	}
 }
 
@@ -1520,6 +1532,7 @@ jCVL_ColumnListView.prototype.uncheckAll = function () {
 	this.jaws.clear();
 	this.labels = {};
 }
+
 
 
 

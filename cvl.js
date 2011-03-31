@@ -418,6 +418,7 @@ jCVL_ColumnItem.prototype.fireOnClick = function () {
 
 // Calls client onClick handler
 jCVL_ColumnItem.prototype.doOnClick = function (ev) {
+	ev.stopPropagation();
 	this.setSelected(true);
 	this.onClick(ev, this);
 };
@@ -464,7 +465,8 @@ function jCVL_Column(opts)
 		margin:     10,
 		parentItem: null,
 		onClick:         emptyHandler,
-		onCheckboxClick: emptyHandler
+		onCheckboxClick: emptyHandler,
+		onColumnClick:   emptyHandler
 	};
 	this.opts          = jQuery.extend(defOpts, opts);
 	this.opts.width    = CVL_AdjustMinMax(this.opts.width, this.opts.minWidt, this.opts.maxWidth);
@@ -479,12 +481,18 @@ function jCVL_Column(opts)
 	this.curItemIndex    = -1;
 	this.onClick         = this.opts.onClick;
 	this.onCheckboxClick = this.opts.onCheckboxClick;
+	this.onColumnClick   = this.opts.onColumnClick;
 	this.simpleMode      = false;
 	
 	this.elem = $('<div>')
 		.attr('id', this.id)
 		.attr('class', 'cvl-column')
 		.css({ 'width': this.opts.width, 'height': this.opts.height, 'margin-right': this.opts.margin });
+	
+	var that = this;
+	this.elem.click(function (ev) {
+		that.doOnColumnClick(ev);
+	});
 }
 
 // Returns html element itself
@@ -505,7 +513,6 @@ jCVL_Column.prototype._createItem = function (index, text) {
 	var that = this;
 	item.setOnClick(function (ev, item) { that.onItemClick(ev, index, item); });
 	item.setOnCheckboxClick(function (ev, item) { that.onItemCheckboxClick(ev, index, item); });
-
 	return item;
 }
 
@@ -542,6 +549,10 @@ jCVL_Column.prototype.setData = function (data, parentItem) {
 	this._fillItems(this.data);
 }
 
+jCVL_Column.prototype.doOnColumnClick = function (ev) {
+	this.onColumnClick(ev);
+}
+
 // Change selected state of column items and call client's onClick handler
 jCVL_Column.prototype.onItemClick = function (ev, index, item) {
 	if (this.curItem && this.curItem != item)
@@ -555,6 +566,10 @@ jCVL_Column.prototype.onItemClick = function (ev, index, item) {
 // Calls client's handler
 jCVL_Column.prototype.onItemCheckboxClick = function (ev, index, item) {
 	this.onCheckboxClick(ev, index, item);
+}
+
+jCVL_Column.prototype.onClick = function (ev) {
+	this.onColumnClick
 }
 
 // Gets current item/index 
@@ -661,6 +676,10 @@ jCVL_Column.prototype.getSimpleMode = function () {
 	return this.simpleMode;
 }
 
+jCVL_Column.prototype.isVisible = function () {
+	return this.elem.is(':visible');
+}
+
 // Hides column (if !simple - with animation)
 jCVL_Column.prototype.hide = function (cb) {
 	this.setWidth(this.opts.defWidth);
@@ -711,6 +730,10 @@ jCVL_Column.prototype.setWidth = function (w) {
 	var width = parseInt(w);
 	this.opts.width = CVL_AdjustMinMax(width, this.opts.minWidth, this.opts.maxWidth);
 	this.elem.css({ width: this.opts.width });
+}
+
+jCVL_Column.prototype.getFullWidth = function () {
+	return this.elem.outerWidth(true);
 }
 
 
@@ -764,7 +787,15 @@ jCVL_ColumnSplitter.prototype.appendTo = function (elem) {
 
 // Set height equal to left column heigh
 jCVL_ColumnSplitter.prototype.adjustHeight = function () {
-	this.elem.height($(this.opts.leftCol.get()).outerHeight());
+	this.elem.height($(this.opts.leftCol.get()).outerHeight(true));
+}
+
+jCVL_ColumnSplitter.prototype.getFullWidth = function () {
+	return this.elem.outerWidth(true);
+}
+
+jCVL_ColumnSplitter.prototype.isVisible = function () {
+	return this.elem.is(':visible');
 }
 
 // Show/hide
@@ -887,8 +918,8 @@ jCVL_ColumnSplitter.prototype.onMouseUpOut = function (ev) {
 function jCVL_ColumnList (opts)
 {
 	var defOpts = {
-		columnWidth:      150,
 		height:           200,
+		columnWidth:      150,
 		columnMargin:     10,
 		columnNum:        3,
 		columnMinWidth:   150,
@@ -905,22 +936,31 @@ function jCVL_ColumnList (opts)
 	this.spls = [];
 	this.data = this.opts.data;
 	
+	this.wrapper = $('<div>')
+		.attr('id', this.opts.id + '-wrapper')
+		.attr('class', 'cvl-column-list-wrapper')
+		.css({ 
+			'overflow-x': 'auto',
+			'padding':    0,
+			'position':   'relative'
+		});
 	this.elem = $('<div>')
 		.attr('id', this.opts.id)
 		.attr('class', 'cvl-column-list');
 	
+	this.wrapper.append(this.elem);
 	this._createColumns();
 }
 
 // Returns html element itself
 jCVL_ColumnList.prototype.get = function () {
-	return this.elem;
+	return this.wrapper; //this.elem;
 }
 
 // Appends element to given one
 jCVL_ColumnList.prototype.appendTo = function (elem) {
 	if ($(elem).length != 0)
-		$(elem).append(this.elem);
+		$(elem).append(this.wrapper);
 }
 
 jCVL_ColumnList.prototype.getColumn = function (index) {
@@ -944,7 +984,9 @@ jCVL_ColumnList.prototype._createColumns = function () {
 			onClick:  (function (colIndex) { return function (ev, index, item) { 
 				that.onColumnItemClick(ev, colIndex, index, item); }; })(i),
 			onCheckboxClick: (function (colIndex) { return function (ev, index, item) { 
-				that.onColumnItemCheckboxClick(ev, colIndex, index, item); }; })(i)
+				that.onColumnItemCheckboxClick(ev, colIndex, index, item); }; })(i),
+			onColumnClick: (function (colIndex) { return function (ev) {
+				that.onColumnClick(ev, colIndex); }; })(i)
 		});
 		col.setSimpleMode(true);
 		col.appendTo(this.elem);
@@ -982,13 +1024,49 @@ jCVL_ColumnList.prototype._createColumns = function () {
 
 // Resize elements if needed
 jCVL_ColumnList.prototype.adjustElements = function () {
+	this._updateWidth();
+
 	if (this.opts.useSplitters)
-		for (var i = 0; i < this.spls.length; i++)
-			this.spls[i].adjustHeight();
+		jQuery.each(this.spls, function (i, s) { s.adjustHeight(); });
 }
 
 jCVL_ColumnList.prototype.clear = function () {
 	jQuery.each(this.cols, function (index, item) { item.clear(); if (index > 0) item.hide(); });
+	this._updateWidth();
+}
+
+jCVL_ColumnList.prototype.onColumnClick = function (ev, colIndex) {
+	var col       = this.cols[colIndex];
+	var wrapWidth = this.wrapper.outerWidth();
+	var scrLeft   = this.wrapper.scrollLeft();
+	var colLeft   = col.get().position().left;
+	var colRight  = colLeft + col.getFullWidth();
+
+	if (this.opts.useSplitters)
+		colRight += this.spls[colIndex].getFullWidth();
+
+	var scrl = null;
+	if (colLeft < 0)
+	{
+		scrl = scrLeft - Math.abs(colLeft);
+		// If not first column, show part of previous
+		if (colIndex > 0)
+		{
+			var lim = 12 + (this.opts.useSplitters ? this.spls[colIndex - 1].getFullWidth() : 0);
+			if (scrl > lim)
+				scrl -= lim;
+		}
+	}
+	else if (colRight > wrapWidth)
+	{
+		scrl = scrLeft + colRight - wrapWidth;
+		// If not last column, show part of next
+		if (colIndex < this.cols.length - 1)
+			scrl += 12 + (this.opts.useSplitters ? this.spls[colIndex + 1].getFullWidth() : 0);
+	}
+
+	if (scrl != null)
+		this.wrapper.animate({ scrollLeft: scrl }, 'fast');
 }
 
 jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex, item) {
@@ -1012,14 +1090,45 @@ jCVL_ColumnList.prototype.onColumnItemClick = function (ev, colIndex, itemIndex,
 		{
 			var nextCol = this.cols[colIndex + 1];
 			nextCol.clear();
+			// Adjust width of wrapper
+			var newWidth = this._calculateWidth() + nextCol.getFullWidth();
+			if (this.opts.useSplitters)
+				newWidth += this.spls[colIndex + 1].getFullWidth();
+			this._updateWidth(newWidth);
+
 			nextCol.show(function () {
 				nextCol.setData(that.cols[colIndex].getItemData(itemIndex));
 				nextCol.setParentItem(item);
 				that.opts.onClick(ev, colIndex, itemIndex, item);
+				
+				if (that.wrapper.width() < that._calculateWidth())
+					that.wrapper.animate({ scrollLeft: that._calculateWidth() - that.wrapper.width() }, 'fast');
 			});
 			if (this.opts.useSplitters)
 				this.spls[colIndex + 1].show();
 			bEx = false;
+		}
+		else // no children
+		{
+			that._updateWidth();
+			
+			var scrl        = null;
+			var col         = this.cols[colIndex];
+			var colLeft     = col.get().position().left;
+			var colRight    = colLeft + col.getFullWidth();
+			var wrapWidth   = this.wrapper.outerWidth();
+			var scrLeft     = this.wrapper.scrollLeft();
+
+			if (this.opts.useSplitters)
+				colRight += this.spls[colIndex].getFullWidth();
+
+			if (colLeft < 0)
+				scrl = Math.abs(colLeft);
+			else if (colRight > wrapWidth)
+				scrl = scrLeft + colRight - wrapWidth;
+			
+			if (scrl != null)
+				this.wrapper.animate({ scrollLeft: scrl }, 'fast');
 		}
 	}
 
@@ -1085,6 +1194,20 @@ jCVL_ColumnList.prototype.checkAll = function (bCheck) {
 	jQuery.each(this.cols, function (index, col) {
 		col.checkAll(!!bCheck);
 	});
+}
+
+jCVL_ColumnList.prototype._calculateWidth = function () {
+	var w = 0;
+	jQuery.map(jQuery.merge(jQuery.merge([], this.cols), this.spls), function (elem, i) {
+		if (elem.isVisible())
+			w += elem.getFullWidth();
+	});
+	return w;
+}
+
+jCVL_ColumnList.prototype._updateWidth = function (w) {
+	var width = typeof(w) == "number" ? w : this._calculateWidth();
+	this.elem.width(width);
 }
 
 // -----------------------------------------------------------------------------

@@ -34,6 +34,9 @@
  * Parameters v0.2.4
  *   singleCheck      - only one item can be checked
  *
+ * Parameters v0.3.2
+ *   leafMode         - If true control will store only leaf values (that has not any children items)
+ *
  * Usage example:
  * 
  *		jQuery.fn.jColumnListView({
@@ -54,11 +57,13 @@
  *          columnMaxWidth:   180
  * // Since version 0.2.4
  *          singleCheck:      false
+ * // Since version 0.3.2
+ *          leafMode:         true
  *		});
  *
  * Author:  Alexander Khizha <khizhaster@gmail.com>
- * Version: 0.2.0
- * Date:    29.03.2011
+ * Version: 0.3.2
+ * Date:    04.04.2011
  * License: GPL v2.0
  */
 
@@ -644,12 +649,14 @@ jCVL_Column.prototype.getFullPath = function (index, toLevel_CurrentIndex, toLev
 
 	if (index >= 0 && index < this.items.length)
 	{
-		str.push({ text: this.items[index].getText(), value: this.items[index].getValue() });
+		var curIt = this.items[index];
+		str.push({ text: curIt.getText(), value: curIt.getValue(), hasChildren: this.itemHasChildren(index) });
 		var p = this.getParentItem();
 		while (p && (curLevel == -1 || --curLevel >= toLevel))
 		{
-			str.push({ text: p.getText(), value: p.getValue() });
-			p = p.getParentColumn().getParentItem();
+			var pCol = p.getParentColumn();
+			str.push({ text: p.getText(), value: p.getValue(), hasChildren: pCol.itemHasChildren(pCol.getItemIndex(p.getValue())) });
+			p = pCol.getParentItem();
 		}
 	}
 
@@ -668,6 +675,15 @@ jCVL_Column.prototype.getFullCheckedPathes = function () {
 // Gets item and item data
 jCVL_Column.prototype.getItem = function (index) {
 	return (index >= 0 && index < this.items.length) ? this.items[index] : undefined;
+}
+
+// Returns index of item by value
+jCVL_Column.prototype.getItemIndex = function (value) {
+	var index = null;
+	for (var i=0; i<this.items.length && index == null; i++)
+		if (this.items[i].getValue() == value)
+			index = i;
+	return index;
 }
 
 // Returns item data
@@ -1276,7 +1292,8 @@ function jCVL_ColumnListView(opts)
 		paramName:        'columnview[]',
 		elementId:        '',
 		removeULAfter:    false,
-		showLabels:       true
+		showLabels:       true,
+		leafMode:         false
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -1429,7 +1446,8 @@ jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIn
 			if (typeof(that.labels[item.value]) == 'undefined')
 			{
 				that.labels[item.value] = 1;
-				that.jaws.addJaw(item.text, item.value);
+				if (!that.opts.leafMode || !item.hasChildren)
+					that.jaws.addJaw(item.text, item.value);
 			}
 			else
 				that.labels[item.value]++;
@@ -1579,7 +1597,8 @@ jQuery.fn.jColumnListView = function (options) {
 		appendToId:       '',
 		removeULAfter:    false,
 		showLabels:       true,
-		singleCheck:      false
+		singleCheck:      false,
+		leafMode:         false
 	};
 	var opts = $.extend(defOpts, options);
 

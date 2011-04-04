@@ -77,8 +77,10 @@ function CVL_AdjustMinMax(val, min, max)
 // Parameters:
 //   id          - ID for Jaw
 //   text        - Text label
+//   value       - Value, passed to <input> element
 //   onDelClick  - onClick handler for Del button
 //   onNameClick - onClick handler for name element
+//   paramName   - Name of <input> element
 //
 function jCVL_Jaw (opts)
 {
@@ -89,8 +91,8 @@ function jCVL_Jaw (opts)
 	this.onDelClick  = opts.onDelClick  || emptyHandler;
 	this.onNameClick = opts.onNameClick || emptyHandler;
 	this.paramName   = opts.paramName   || 'cvl-param';
-	
-	
+	this.value       = opts.value       || this.text;
+
 	var clSel = 'cvl-selected-jaw', clDel = 'cvl-selected-del', clName = 'cvl-selected-name';
 	
 	var elem    = $('<span>')
@@ -107,22 +109,33 @@ function jCVL_Jaw (opts)
 		.click(function (ev) { that.doOnNameClick(ev); });
 	var valElem = $('<input type="hidden">')
 		.attr('name',  this.paramName)
-		.attr('value', this.text);
+		.attr('value', this.value);
 
 	elem.append(valElem).append(delElem).append(nameElem);
 	this.elems = { 'elem': elem, 'delElem': delElem, 'nameElem': nameElem, 'valElem': valElem };
 }
 
-// Sets text for jaw label
-jCVL_Jaw.prototype.setText = function (text) {
-	this.text = text;
+// Sets text and value for jaw label
+jCVL_Jaw.prototype.setText = function (text, value) {
+	this.text  = text;
+	this.value = value || this.text;
 	this.elems.nameElem.text(this.text);
-	this.elems.valElem.attr('value', text);
+	this.elems.valElem.attr('value', this.value);
+}
+
+// Sets value
+jCVL_Jaw.prototype.setValue = function (value) {
+	this.elems.valElem.attr('value', this.value = value);
 }
 
 // Returns a text from label
 jCVL_Jaw.prototype.getText = function () {
 	return this.text;
+}
+
+// Returns value
+jCVL_Jaw.prototype.getValue = function () {
+	return this.value;
 }
 
 // Sets onClick Del handler
@@ -132,7 +145,7 @@ jCVL_Jaw.prototype.setOnDelClick = function (cb) {
 
 // Real onClick Del handler
 jCVL_Jaw.prototype.doOnDelClick = function (event) {
-	this.onDelClick(event, this.id, this.text);
+	this.onDelClick(event, this.id, this.text, this.value);
 }
 
 // Sets onClick name handler
@@ -142,7 +155,7 @@ jCVL_Jaw.prototype.setOnNameClick = function (cb) {
 
 // Real onClick name handler
 jCVL_Jaw.prototype.doOnNameClick = function (event) {
-	this.onNameClick(event, this.id, this.text);
+	this.onNameClick(event, this.id, this.text, this.value);
 }
 
 // Returns HTML element itself
@@ -164,16 +177,18 @@ jCVL_Jaw.prototype.remove = function (cb) {
 
 jCVL_Jaw.prototype._remove = function (cb) {
 	this.get().remove();
+	if (cb)
+		cb();
 }
 
 // -----------------------------------------------------------------------------
 // Jaw Area
 //
 // Parameters:
-//   id            - Create with this ID
-//   unique        - Store only unique values
-//   onDelClick    - onClick handler for item's Del
-//   onNameClick   - onClick handler for item's name
+//   id             - Create with this ID
+//   unique         - Store only unique values
+//   onDelClick     - onClick handler for item's Del
+//   onNameClick    - onClick handler for item's name
 //   
 // Note: If 'elementId' is defined it prefer to 'id'.
 //
@@ -182,11 +197,11 @@ function jCVL_JawArea (opts)
 	var emptyHandler = function (ev, id, text) {};
 	this.jaws = [];
 	
-	this.unique      = typeof(opts.unique) == 'boolean' ? opts.unique : true;
-	this.id          = opts.id || 'cvl-jaw-area';
-	this.onDelClick  = opts.onDelClick  || emptyHandler;
-	this.onNameClick = opts.onNameClick || emptyHandler;
-	this.paramName   = opts.paramName   || 'cvl-param';
+	this.unique       = typeof(opts.unique) == 'boolean' ? opts.unique : true;
+	this.id           = opts.id             || 'cvl-jaw-area';
+	this.onDelClick   = opts.onDelClick     || emptyHandler;
+	this.onNameClick  = opts.onNameClick    || emptyHandler;
+	this.paramName    = opts.paramName      || 'cvl-param';
 
 	this.elem   = $('<div>')
 		.attr('class', 'cvl-jaw-area')
@@ -204,46 +219,55 @@ jCVL_JawArea.prototype.appendTo = function (elem) {
 		$(elem).append(this.elem);
 }
 
-// Returns true if area has label with 'text'
-jCVL_JawArea.prototype.has = function (text) {
+jCVL_JawArea.prototype._has = function (bTextOrValue, t) {
 	var h = false;
-	for (var i=0; i<this.jaws.length; i++)
+	for (var i=0; i<this.jaws.length && !h; i++)
 	{
-		if (this.jaws[i].getText() == text)
-		{
+		var v = !!bTextOrValue ? this.jaws[i].getText() : this.jaws[i].getValue();
+		if (v == t)
 			h = true;
-			break;
-		}
 	}
 	return h;
 }
 
+// Returns true if area has label with 'text'
+jCVL_JawArea.prototype.hasText = function (text) {
+	return this._has(true, text);
+}
+
+// Returns true if area has label with 'value'
+jCVL_JawArea.prototype.hasValue = function (value) {
+	return this._has(false, value);
+}
+
 // Add new label to area
 // Skip existing labels if this.unique is true
-jCVL_JawArea.prototype.addJaw = function (text) {
-	if (!this.unique || !this.has(text))
+jCVL_JawArea.prototype.addJaw = function (text, value) {
+	var val = value || text;
+	if (!this.unique || !this.hasValue(val))
 	{
-		var that = this;
+		var that  = this;
 		var arrId = this.jaws.length;
 		var id    = this.id + '-jaw' + arrId;
 		var that  = this;
 		var j = new jCVL_Jaw({
 			id:         id,
 			text:       text,
+			value:      val,
 			paramName:  this.paramName
 		});
-		j.setOnDelClick(function (ev, ev_id, ev_text) { that.onJawDelClick(ev, ev_id, ev_text, j); });
-		j.setOnNameClick(function (ev, ev_id, ev_text) { that.onJawNameClick(ev, ev_id, ev_text, j); });
+		j.setOnDelClick(function (ev, ev_id, ev_text, ev_value)  { that.onJawDelClick(ev,  ev_id, ev_text, ev_value, j); });
+		j.setOnNameClick(function (ev, ev_id, ev_text, ev_value) { that.onJawNameClick(ev, ev_id, ev_text, ev_value, j); });
 		this.jaws.push(j);
 		this.elem.append(j.get());
 	}
 }
 
 // Removes a label with given text
-jCVL_JawArea.prototype.delJaw = function (text, cb) {
+jCVL_JawArea.prototype.delJaw = function (value, cb) {
 	for (var i=0; i<this.jaws.length; i++)
 	{
-		if (this.jaws[i].getText() == text)
+		if (this.jaws[i].getValue() == value)
 		{
 			var j = this.jaws.splice(i, 1)[0];
 			j.remove(cb);
@@ -253,16 +277,16 @@ jCVL_JawArea.prototype.delJaw = function (text, cb) {
 }
 
 // onClick handler for Del button of each label
-jCVL_JawArea.prototype.onJawDelClick = function (ev, id, text, jaw) {
+jCVL_JawArea.prototype.onJawDelClick = function (ev, id, text, value, jaw) {
 	var that = this;
-	this.delJaw(text, function () {
-		that.onDelClick(ev, id, text);
+	this.delJaw(value, function () {
+		that.onDelClick(ev, id, text, value);
 	});
 }
 
 // onClick handler for name element of each label
-jCVL_JawArea.prototype.onJawNameClick = function (ev, id, text, jaw) {
-	this.onNameClick(ev, id, text);
+jCVL_JawArea.prototype.onJawNameClick = function (ev, id, text, value, jaw) {
+	this.onNameClick(ev, id, text, value);
 }
 
 jCVL_JawArea.prototype.setOnDelClick = function (cb) {
@@ -271,15 +295,6 @@ jCVL_JawArea.prototype.setOnDelClick = function (cb) {
 
 jCVL_JawArea.prototype.setOnNameClick = function (cb) {
 	this.onNameClick = cb;
-}
-
-// Returns a string combined of all labels
-jCVL_JawArea.prototype.getString = function () {
-	var str = [];
-	jQuery.each(this.jaws, function (i, e) {
-		str.push(e.getText());
-	});
-	return str.join(',');
 }
 
 jCVL_JawArea.prototype.hide = function () {
@@ -304,15 +319,18 @@ jCVL_JawArea.prototype.clear = function () {
 // Parameters:
 //   id      - ID of item
 //   text    - label string
+//   value   - element value
 //   checked - initial state of checkbox
 //   onClick - handler for whole item
 //   onCheckboxClick - handler for checkbox only 
+//
 function jCVL_ColumnItem (opts)
 {
 	var emptyHandler = function (ev, item) {};
 
 	this.id        = opts.id              || 'cvl-column-item';
 	this.text      = opts.text            || 'Column Item';
+	this.value     = opts.value           || this.text;
 	this.onClick   = opts.onClick         || emptyHandler;
 	this.onCBClick = opts.onCheckboxClick || emptyHandler;
 	this.parentCol = opts.parentCol       || undefined;
@@ -377,12 +395,23 @@ jCVL_ColumnItem.prototype.getText = function () {
 	return this.text;
 }
 
+// Returns element value
+jCVL_ColumnItem.prototype.getValue = function () {
+	return this.value;
+}
+
 // Sets text label of item
 jCVL_ColumnItem.prototype.setText = function (text) {
 	this.text = text;
 	this.elems.label.text(this.text);
 }
 
+// Sets element value
+jCVL_ColumnItem.prototype.setValue = function (val) {
+	this.value = val;
+}
+
+// Set/Get full path for element (path to root column item)
 jCVL_ColumnItem.prototype.setFullPath = function (path) {
 	this.fullPath = path;
 }
@@ -439,7 +468,9 @@ jCVL_ColumnItem.prototype.doOnCheckboxClick = function (ev) {
 }
 
 // Returns parent column object
-jCVL_ColumnItem.prototype.getParentColumn = function () { return this.parentCol; }
+jCVL_ColumnItem.prototype.getParentColumn = function () {
+	return this.parentCol;
+}
 
 
 // -----------------------------------------------------------------------------
@@ -468,14 +499,15 @@ function jCVL_Column(opts)
 		onCheckboxClick: emptyHandler,
 		onColumnClick:   emptyHandler
 	};
-	this.opts          = jQuery.extend(defOpts, opts);
-	this.opts.width    = CVL_AdjustMinMax(this.opts.width, this.opts.minWidt, this.opts.maxWidth);
-	this.opts.defWidth = this.opts.width;
+	this.opts            = jQuery.extend(defOpts, opts);
+	this.opts.width      = CVL_AdjustMinMax(this.opts.width, this.opts.minWidt, this.opts.maxWidth);
+	this.opts.defWidth   = this.opts.width;
 
 	this.id              = this.opts.id;
 	this.data            = [];
 	this.parentItem      = this.opts.parentItem;
 	this.parentText      = this.parentItem ? this.parentItem.getText() : undefined;
+	this.parentValue     = this.parentItem ? this.parentItem.getValue() : undefined;
 	this.items           = [];
 	this.curItem         = undefined;
 	this.curItemIndex    = -1;
@@ -507,9 +539,9 @@ jCVL_Column.prototype.appendTo = function (elem) {
 }
 
 // Creates new ColumnItem with 'text' label
-jCVL_Column.prototype._createItem = function (index, text) {
+jCVL_Column.prototype._createItem = function (index, text, value) {
 	var id = this.id + '-item' + this.items.length;
-	var item = new jCVL_ColumnItem({ id: id, text: text, parentCol: this });
+	var item = new jCVL_ColumnItem({ id: id, text: text, value: value, parentCol: this });
 	var that = this;
 	item.setOnClick(function (ev, item) { that.onItemClick(ev, index, item); });
 	item.setOnCheckboxClick(function (ev, item) { that.onItemCheckboxClick(ev, index, item); });
@@ -534,7 +566,7 @@ jCVL_Column.prototype._fillItems = function (data) {
 	var that = this;
 	this.clear();
 	jQuery.each(data, function (index, d) {
-		var item = that._createItem(index, d.name);
+		var item = that._createItem(index, d.name, d.value);
 		that.items.push(item);
 		item.setFullPath(that.getFullPath(index));
 		item.appendTo(that.elem);
@@ -543,9 +575,10 @@ jCVL_Column.prototype._fillItems = function (data) {
 
 // Sets new data for column
 jCVL_Column.prototype.setData = function (data, parentItem) {
-	this.data       = data;
-	this.parentItem = (parentItem) ? parentItem : undefined;
-	this.parentText = (parentItem) ? parentItem.getText() : undefined;
+	this.data        = data;
+	this.parentItem  = (parentItem) ? parentItem : undefined;
+	this.parentText  = (parentItem) ? parentItem.getText() : undefined;
+	this.parentValue = (parentItem) ? parentItem.getValue() : undefined;
 	this._fillItems(this.data);
 }
 
@@ -568,10 +601,6 @@ jCVL_Column.prototype.onItemCheckboxClick = function (ev, index, item) {
 	this.onCheckboxClick(ev, index, item);
 }
 
-jCVL_Column.prototype.onClick = function (ev) {
-	this.onColumnClick
-}
-
 // Gets current item/index 
 jCVL_Column.prototype.getSelectedItem = function () { return this.curItem; }
 jCVL_Column.prototype.getSelectedIndex = function () { return this.curItemIndex; }
@@ -584,56 +613,47 @@ jCVL_Column.prototype.getCheckedItems = function () {
 	return items;
 }
 
-// Returns a string of checked items joined by separator (',' by default)
-jCVL_Column.prototype.getCheckedString = function (separator) {
-	var sep = separator || ',';
-	var str = [];
-	var items = this.getCheckedItems();
-	for (var i=0; i<items.length; i++)
-		str.push(items[i].getText());
-	return str.join(sep);
-}
-
 // Gets/Sets parent item and text
-jCVL_Column.prototype.getParentItem = function () { return this.parentItem; }
-jCVL_Column.prototype.getParentText = function () { return this.parentText; }
+jCVL_Column.prototype.getParentItem  = function () { return this.parentItem; }
+jCVL_Column.prototype.getParentText  = function () { return this.parentText; }
+jCVL_Column.prototype.getParentValue = function () { return this.parentValue; }
 
 jCVL_Column.prototype.setParentItem = function (item) {
 	if (item)
 	{
-		this.parentItem = item;
-		this.parentText = item.getText();
+		this.parentItem  = item;
+		this.parentText  = item.getText();
+		this.parentValue = item.getValue();
 	}
 }
 
 // Return array of items' text
-jCVL_Column.prototype.getItemsString = function () {
+jCVL_Column.prototype.getItemsString = function (bTextOrValue) {
 	var str = [];
-	jQuery.each(this.items, function (index, item) { str.push(item.getText()); });
+	jQuery.each(this.items, function (index, item) { str.push(!!bTextOrValue ? item.getText() : item.getValue()); });
 	return str;
 }
 
-// Returns full string from index to root column item joined by separator
+// Returns full string from index to root column item
 // If defined toColumnIndex search will be stopped at column with such index
-jCVL_Column.prototype.getFullPath = function (index, separator, toLevel_CurrentIndex, toLevel_ColumnIndex) {
+jCVL_Column.prototype.getFullPath = function (index, toLevel_CurrentIndex, toLevel_ColumnIndex) {
 	var str = [];
-	var sep = separator || ',';
 	
 	var curLevel = toLevel_CurrentIndex || -1;
 	var toLevel  = toLevel_ColumnIndex  || -1;
 
 	if (index >= 0 && index < this.items.length)
 	{
-		str.push(this.items[index].getText());
+		str.push({ text: this.items[index].getText(), value: this.items[index].getValue() });
 		var p = this.getParentItem();
 		while (p && (curLevel == -1 || --curLevel >= toLevel))
 		{
-			str.push(p.getText());
+			str.push({ text: p.getText(), value: p.getValue() });
 			p = p.getParentColumn().getParentItem();
 		}
 	}
 
-	return str.reverse().join(sep);
+	return str.reverse();
 }
 
 // Returns array of full pathes of checked items
@@ -962,7 +982,7 @@ function jCVL_ColumnList (opts)
 
 // Returns html element itself
 jCVL_ColumnList.prototype.get = function () {
-	return this.wrapper; //this.elem;
+	return this.wrapper;
 }
 
 // Appends element to given one
@@ -1023,7 +1043,7 @@ jCVL_ColumnList.prototype._createColumns = function () {
 			// Setup right column for previous splitter
 			if (i > 0)
 			{
-				spl.hide(); // hide separators except first
+				spl.hide(); // hide splitter except first
 				this.spls[i - 1].setRightColumn(leftCol);
 			}
 		}
@@ -1221,13 +1241,14 @@ jCVL_ColumnList.prototype._updateWidth = function (w) {
 	this.elem.width(width);
 }
 
+// Search for data item by path
 jCVL_ColumnList.prototype._getDataItemByPath = function (path) {
 	var p;
 	var d = this.data; 
 	while (p = path.shift())
 	{
 		for (var i=0; i<d.length; i++)
-			if (d[i].name == p)
+			if (d[i].value == p.value)
 			{
 				d = d[i].data;
 				break;
@@ -1272,11 +1293,11 @@ function jCVL_ColumnListView(opts)
 	this.list = new jCVL_ColumnList(listOpts);
 	
 	this.jaws = new jCVL_JawArea({
-		id:          this.opts.id + '-jaws-area',
-		unique:      true,
-		paramName:   this.opts.paramName,
-		onDelClick:  function (ev, id, text) { that.onJawDelClick(ev, id, text); },
-		onNameClick: function (ev, id, text) { that.onJawNameClick(ev, id, text); }
+		id:             this.opts.id + '-jaws-area',
+		unique:         true,
+		paramName:      this.opts.paramName,
+		onDelClick:     function (ev, id, text, value) { that.onJawDelClick(ev, id, text, value); },
+		onNameClick:    function (ev, id, text, value) { that.onJawNameClick(ev, id, text, value); }
 	});
 	this.labels = {};
 	
@@ -1351,13 +1372,14 @@ jCVL_ColumnListView.prototype._parseData = function (ul_elem, data) {
 
 	var that = this;
 	$(ul_elem).children('li').each(function (index, item) {
-		var name = $.trim($($(item).contents()[0]).text());
+		var name  = $.trim($($(item).contents()[0]).text());
+		var value = $(item).attr('itemValue') || name;
 		var childrenData = [];
 		var ulChild = $(item).children('ul');
 		if (ulChild.length)
 			that._parseData(ulChild[0], childrenData);
 
-		data.push({ name: name, data: childrenData, hasChildren: childrenData.length != 0 });
+		data.push({ name: name, value: value, data: childrenData, hasChildren: childrenData.length != 0 });
 	});
 	
 	return data;
@@ -1367,10 +1389,9 @@ jCVL_ColumnListView.prototype._parseData = function (ul_elem, data) {
 jCVL_ColumnListView.prototype.onColumnItemClick = function (event, colIndex, itemIndex, item) {
 	var aKeys = function (obj) {
 		var keys = [];
-		for(i in obj) if (obj.hasOwnProperty(i))
-		{
-			keys.push(i);
-		}
+		for(i in obj) 
+			if (obj.hasOwnProperty(i))
+				keys.push(i);
 		return keys;
 	};
 
@@ -1401,17 +1422,17 @@ jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIn
 				it.setChecked(true);
 		}
 		
-		// Get path to root column
-		var labs = this.list.getColumn(colIndex).getFullPath(itemIndex).split(',');
+		// Get path to root column ([ { text, value }, ... ])
+		var labs = this.list.getColumn(colIndex).getFullPath(itemIndex);
 		// Store labels and update jaws
 		jQuery.each(labs, function (index, item) {
-			if (typeof(that.labels[item]) == 'undefined')
+			if (typeof(that.labels[item.value]) == 'undefined')
 			{
-				that.labels[item] = 1;
-				that.jaws.addJaw(item);
+				that.labels[item.value] = 1;
+				that.jaws.addJaw(item.text, item.value);
 			}
 			else
-				that.labels[item]++;
+				that.labels[item.value]++;
 		});
 	}
 	else
@@ -1422,22 +1443,23 @@ jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIn
 		// Find current item in data tree
 		var col  = this.list.getColumn(colIndex);
 		var path = col.getFullPath(itemIndex);
-		var data = this.list._getDataItemByPath(path.split(','));
+		var data = this.list._getDataItemByPath(path);
 		
 		// Collect all children items using data hash
 		var getChildren = function (pData, chld) {
 			jQuery.each(pData, function (index, item) {
 				if (item.hasChildren)
 					getChildren(item.data, chld);
-				chld.push(item.name);
+				chld.push(item.value);
 			});
 		};
 		getChildren(data, rems);
 		// Remove current item's label too
-		rems.push(item.getText());
+		rems.push(item.getValue());
 		
 		// Remove collected items
 		jQuery.each(rems, function (index, item) {
+			// remove by value
 			if (typeof(that.labels[item]) != 'undefined')
 			{
 				that.jaws.delJaw(item);
@@ -1448,7 +1470,7 @@ jCVL_ColumnListView.prototype.onColumnItemCheckboxClick = function (event, colIn
 }
 
 // Returns path to given element in array, where array index is colIndex and array value is itemIndex
-jCVL_ColumnListView.prototype._findListItemPath = function (data, text) {
+jCVL_ColumnListView.prototype._findListItemPath = function (data, value) {
 	var path_to_col = [];
 
 	// Traverse tree in postorder
@@ -1456,7 +1478,7 @@ jCVL_ColumnListView.prototype._findListItemPath = function (data, text) {
 		var ret = -1;
 		for (var i=0; i<data.length; i++)
 		{
-			if (data[i].hasChildren && findLevel(data[i].data) >= 0 || data[i].name == text)
+			if (data[i].hasChildren && findLevel(data[i].data) >= 0 || data[i].value == value)
 			{
 				path_to_col.push(ret = i);
 				break;
@@ -1491,8 +1513,8 @@ jCVL_ColumnListView.prototype._selectColumnItemByPath = function (col, ptc, cb) 
 		cb();
 }
 
-jCVL_ColumnListView.prototype.onJawDelClick = function (event, id, text) {
-	var ptc  = this._findListItemPath(this.list.getData(), text);
+jCVL_ColumnListView.prototype.onJawDelClick = function (event, id, text, value) {
+	var ptc  = this._findListItemPath(this.list.getData(), value);
 	var col  = ptc.length - 1;
 	var itm  = ptc[ptc.length - 1];
 	var that = this;
@@ -1504,13 +1526,13 @@ jCVL_ColumnListView.prototype.onJawDelClick = function (event, id, text) {
 		});
 }
 
-jCVL_ColumnListView.prototype.onJawNameClick = function (event, id, text) {
-	var ptc = this._findListItemPath(this.list.getData(), text);
+jCVL_ColumnListView.prototype.onJawNameClick = function (event, id, text, value) {
+	var ptc = this._findListItemPath(this.list.getData(), value);
 	if (ptc.length)
 		this._selectColumnItemByPath(0, ptc);
 }
 
-// Sets given items checked
+// Sets given items checked (by value!)
 jCVL_ColumnListView.prototype.setValues = function (vals) {
 	var that = this;
 	var data = this.list.getData();

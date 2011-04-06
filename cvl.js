@@ -62,7 +62,7 @@
  *		});
  *
  * Author:  Alexander Khizha <khizhaster@gmail.com>
- * Version: 0.3.2
+ * Version: 0.4
  * Date:    04.04.2011
  * License: GPL v2.0
  */
@@ -505,7 +505,7 @@ function jCVL_Column(opts)
 		onColumnClick:   emptyHandler
 	};
 	this.opts            = jQuery.extend(defOpts, opts);
-	this.opts.width      = CVL_AdjustMinMax(this.opts.width, this.opts.minWidt, this.opts.maxWidth);
+	this.opts.width      = CVL_AdjustMinMax(this.opts.width, this.opts.minWidth, this.opts.maxWidth);
 	this.opts.defWidth   = this.opts.width;
 
 	this.id              = this.opts.id;
@@ -561,7 +561,7 @@ jCVL_Column.prototype.clear = function (bTotal) {
 	this.curItemIndex = -1;
 	if (!!bTotal)
 	{
-		this.parentCol = this.parentText = undefined;
+		this.parentCol = this.parentText = this.parentValue = undefined;
 		this.data  = [];
 	}
 }
@@ -865,12 +865,12 @@ jCVL_ColumnSplitter.prototype.setDoRight = function (d) {
 
 jCVL_ColumnSplitter.prototype.setLeftColumn = function (col) {
 	this.opts.leftCol = col;
-	this.opts.doLeft  = !!this.opts.leftCol;
+	this.opts.doLeft  = this.opts.doLeft && !!this.opts.leftCol;
 }
 
 jCVL_ColumnSplitter.prototype.setRightColumn = function (col) {
 	this.opts.rightCol = col;
-	this.opts.doRight  = !this.opts.leftMode && !!this.opts.rightCol;
+	this.opts.doRight  = this.opts.doRight && !this.opts.leftMode && !!this.opts.rightCol;
 }
 
 jCVL_ColumnSplitter.prototype._bindMouseDown = function () {

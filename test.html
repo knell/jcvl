@@ -28,7 +28,8 @@
 			elementId:        'categories',
 			removeAfter:      false,
 			columnMinWidth:   120,
-			columnMaxWidth:   200
+			columnMaxWidth:   200,
+			childIndicator:   true
 		});
 		jQuery.fn.jColumnListView({
 			id:           'cl2',
@@ -45,6 +46,7 @@
 			textFormat:            '%cvl-children-counter% %cvl-text%',
 			childrenCounterFormat: '[%cvl-count%]',
 			emptyChildrenCounter:  false,
+			childIndicator:           true
 		});
 		
 		$('#t1-lmode').change(function () {

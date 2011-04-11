@@ -103,14 +103,14 @@ function jCVL_Label (opts)
 {
 	var emptyHandler = function (ev, id, text) {};
 
-	this.id          = opts.id          || 'cvl-jaw';
+	this.id          = opts.id          || 'cvl-label';
 	this.text        = opts.text        || "";
 	this.onDelClick  = opts.onDelClick  || emptyHandler;
 	this.onNameClick = opts.onNameClick || emptyHandler;
 	this.paramName   = opts.paramName   || 'cvl-param';
 	this.value       = opts.value       || this.text;
 
-	var clSel = 'cvl-selected-jaw', clDel = 'cvl-selected-del', clName = 'cvl-selected-name';
+	var clSel = 'cvl-selected-label', clDel = 'cvl-selected-del', clName = 'cvl-selected-name';
 	
 	var elem    = $('<span>')
 		.attr('class', clSel)
@@ -132,7 +132,7 @@ function jCVL_Label (opts)
 	this.elems = { 'elem': elem, 'delElem': delElem, 'nameElem': nameElem, 'valElem': valElem };
 }
 
-// Sets text and value for jaw label
+// Sets text and value for label
 jCVL_Label.prototype.setText = function (text, value) {
 	this.text  = text;
 	this.value = value || this.text;
@@ -186,7 +186,7 @@ jCVL_Label.prototype.appendTo = function (elem) {
 		$(elem).append(this.elems.elem);
 }
 
-// Removes jaw from DOM with a little animation
+// Removes label from DOM with a little animation
 jCVL_Label.prototype.remove = function (cb) {
 	var that = this;
 	this.elems.elem.fadeOut(200, function () { that.get().remove(); if (cb) cb(); });
@@ -215,13 +215,13 @@ function jCVL_LabelArea (opts)
 	this.jaws = [];
 	
 	this.unique       = typeof(opts.unique) == 'boolean' ? opts.unique : true;
-	this.id           = opts.id             || 'cvl-jaw-area';
+	this.id           = opts.id             || 'cvl-label-area';
 	this.onDelClick   = opts.onDelClick     || emptyHandler;
 	this.onNameClick  = opts.onNameClick    || emptyHandler;
 	this.paramName    = opts.paramName      || 'cvl-param';
 
 	this.elem   = $('<div>')
-		.attr('class', 'cvl-jaw-area')
+		.attr('class', 'cvl-label-area')
 		.attr('id', this.id);
 }
 
@@ -265,7 +265,7 @@ jCVL_LabelArea.prototype.addLabel = function (text, value) {
 	{
 		var that  = this;
 		var arrId = this.jaws.length;
-		var id    = this.id + '-jaw' + arrId;
+		var id    = this.id + '-label' + arrId;
 		var that  = this;
 		var j = new jCVL_Label({
 			id:         id,
@@ -351,6 +351,8 @@ jCVL_LabelArea.prototype.clear = function () {
 //   emptyChildrenCounter  - if true children counter will be renderer even if item has no children (counter will be 0).
 //                               Otherwise item will not render children counter.
 //                               Default: false
+//   childIndicator           - Set true to use indicator element.
+//   childIndicatorTextFormat - Format of text in indicator. Null to not use text.
 //
 
 var jCVL_ColumnItemTags = {
@@ -376,17 +378,20 @@ function jCVL_ColumnItem (opts)
 		textFormat:            jCVL_ColumnItemTags.childrenCounter + ' ' + jCVL_ColumnItemTags.text, // e.g. '[4] Item Text'
 		childrenCounterFormat: '[' + jCVL_ColumnItemTags.childrenNumber + ']', // e.g. '[4]'
 		emptyChildrenCounter:  true,
-		childIndicator:        null
+		childIndicator:           true,
+		childIndicatorTextFormat: null
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	
 	var that = this;
 	this.cl = { 
-		'Elem':     'cvl-column-item',
-		'CB':       'cvl-column-item-checkbox',
-		'CBBox':    'cvl-column-item-checkbox-box',
-		'Label':    'cvl-column-item-label',
-		'Selected': 'cvl-column-item-selected'
+		'Elem':      'cvl-column-item',
+		'CB':        'cvl-column-item-checkbox',
+		'CBBox':     'cvl-column-item-checkbox-box',
+		'Label':     'cvl-column-item-label',
+		'Selected':  'cvl-column-item-selected',
+		'Indicator': 'cvl-column-item-indicator',
+		'ISelected': 'cvl-column-item-indicator-selected'
 	};
 
 	var elem = $('<div>')
@@ -400,12 +405,20 @@ function jCVL_ColumnItem (opts)
 		.click(function(ev) { that.doOnCheckboxClick(ev); });
 	var labelElem = $('<span>')
 		.attr('class', this.cl.Label)
-		.text(this._renderText())
+		.append($('<span>').text(this._renderText()))
 		.click(function (ev) { that.doOnClick(ev); });
+	var inElem = $('<div>')
+		.attr('class', this.cl.Indicator);
+
 	cbBoxElem.append(cbElem);
+	labelElem.append(inElem);
 	elem.append(cbBoxElem).append(labelElem);
-		
-	this.elems = { 'elem': elem, 'checkbox': cbElem, 'label': labelElem };
+	
+	inElem.text(this._renderIndicator());
+	if (!this.opts.childIndicator || !this.hasChildren())
+		inElem.hide();
+
+	this.elems = { 'elem': elem, 'checkbox': cbElem, 'label': labelElem , 'indicator': inElem };
 }
 
 // Returns html element itself
@@ -446,7 +459,7 @@ jCVL_ColumnItem.prototype.getValue = function () {
 // Sets text label of item
 jCVL_ColumnItem.prototype.setText = function (text) {
 	this.opts.text = text;
-	this.elems.label.text(this._renderText());
+	this.elems.label.children('span').text(this._renderText());
 }
 
 // Sets element value
@@ -474,9 +487,17 @@ jCVL_ColumnItem.prototype.setSelected = function (bSelected) {
 	var is = this.isSelected();
 
 	if (bs && !is)
+	{
 		this.elems.elem.addClass(this.cl.Selected);
+		if (this.hasChildren() && this.opts.childIndicator)
+			this.elems.indicator.addClass(this.cl.ISelected);
+	}
 	else if (!bs && is)
+	{
 		this.elems.elem.removeClass(this.cl.Selected);
+		if (this.hasChildren() && this.opts.childIndicator)
+			this.elems.indicator.removeClass(this.cl.ISelected);
+	}
 }
 
 // Sets onClick handler
@@ -518,6 +539,7 @@ jCVL_ColumnItem.prototype.getParentColumn = function () {
 // Set/Get information about children number
 jCVL_ColumnItem.prototype.setChildrenNumber = function (num) {
 	this.opts.childrenNum = parseInt(num);
+	this.updateItem();
 }
 
 jCVL_ColumnItem.prototype.getChildrenNumber = function () {
@@ -581,8 +603,45 @@ jCVL_ColumnItem.prototype._renderText = function () {
 	return str;
 }
 
+// Set/Get child indicator and it's format
+jCVL_ColumnItem.prototype.setChildIndicator = function (bShow) {
+	this.opts.childIndicator = !!bShow;
+	this.updateItem();
+}
+
+jCVL_ColumnItem.prototype.getChildIndicator = function () {
+	return this.opts.childIndicator;
+}
+
+jCVL_ColumnItem.prototype.setChildIndicatorTextFormat = function (fmt) {
+	this.opts.childIndicatorTextFormat = fmt;
+	this.updateItem();
+}
+
+jCVL_ColumnItem.prototype.getChildIndicatorTextFormat = function () {
+	return this.opts.childIndicatorTextFormat;
+}
+
+jCVL_ColumnItem.prototype._renderIndicator = function () {
+	var cn  = this.opts.childrenNum;
+	var emp = this.opts.emptyChildrenCounter;
+	var fmt = this.opts.childIndicatorTextFormat;
+	var str = '';
+	
+	if (fmt && fmt != '' && (cn > 0 || emp))
+		str = fmt.replace(jCVL_ColumnItemTags.childrenNumber, cn, 'g');
+
+	return str;
+}
+
 // Updates item (change text if format has been changed, etc)
 jCVL_ColumnItem.prototype.updateItem = function () {
+	this.elems.indicator.text(this._renderIndicator());
+	if (this.opts.childIndicator && this.hasChildren())
+		this.elems.indicator.show();
+	else if (!this.opts.childIndicator || !this.hasChildren())
+		this.elems.indicator.hide();
+
 	this.setText(this.getText()); // Re-render text
 }
 
@@ -614,7 +673,9 @@ function jCVL_Column(opts)
 		onColumnClick:   emptyHandler,
 		textFormat:            jCVL_ColumnItemTags.text,
 		childrenCounterFormat: null,
-		emptyChildrenCounter:  false
+		emptyChildrenCounter:  false,
+		childIndicator:           true,
+		childIndicatorTextFormat: null
 	};
 	this.opts            = jQuery.extend(defOpts, opts);
 	this.opts.width      = CVL_AdjustMinMax(this.opts.width, this.opts.minWidth, this.opts.maxWidth);
@@ -667,6 +728,8 @@ jCVL_Column.prototype._createItem = function (index, text, value) {
 		textFormat:            this.opts.textFormat,
 		childrenCounterFormat: this.opts.childrenCounterFormat,
 		emptyChildrenCounter:  this.opts.emptyChildrenCounter,
+		childIndicator:           this.opts.childIndicator,
+		childIndicatorTextFormat: this.opts.childIndicatorTextFormat
 	});
 	var that = this;
 	item.setOnClick(function (ev, item) { that.onItemClick(ev, index, item); });
@@ -903,19 +966,32 @@ jCVL_Column.prototype.updateItems = function () {
 // Set* functions update item
 jCVL_Column.prototype.setTextFormat = function (fmt) {
 	jQuery.each(this.items, function (index, item) {
-		item.setTextFormat(fmt);
+		item.setTextFormat(this.opts.textFormat = fmt);
 	});
 }
 
 jCVL_Column.prototype.setChildrenCounterFormat = function (fmt) {
 	jQuery.each(this.items, function (index, item) {
-		item.setChildrenCounterFormat(fmt);
+		item.setChildrenCounterFormat(this.opts.childrenCounterFormat = fmt);
 	});
 }
 
 jCVL_Column.prototype.setEmptyChildrenCounter = function (bShow) {
 	jQuery.each(this.items, function (index, item) {
-		item.setEmptyChildrenCounter(bShow);
+		item.setEmptyChildrenCounter(this.opts.emptyChildrenCounter = !!bShow);
+	});
+}
+
+// Child indicator
+jCVL_Column.prototype.setChildIndicator = function (bShow) {
+	jQuery.each(this.items, function (index, item) {
+		item.setChildIndicator(this.opts.childIndicator = !!bShow);
+	});
+}
+
+jCVL_Column.prototype.setChildIndicatorTextFormat = function (fmt) {
+	jQuery.each(this.items, function (index, item) {
+		item.setChildIndicatorTextFormat(this.opts.childIndicatorTextFormat = fmt);
 	});
 }
 
@@ -1123,7 +1199,9 @@ function jCVL_ColumnList (opts)
 		onCheckboxClick:  function () {},
 		textFormat:            jCVL_ColumnItemTags.text,
 		childrenCounterFormat: null,
-		emptyChildrenCounter:  false
+		emptyChildrenCounter:  false,
+		childIndicator:           true,
+		childIndicatorTextFormat: null
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	this.cols = [];
@@ -1184,7 +1262,9 @@ jCVL_ColumnList.prototype._createColumns = function () {
 				that.onColumnClick(ev, colIndex); }; })(i),
 			textFormat:            this.opts.textFormat,
 			childrenCounterFormat: this.opts.childrenCounterFormat,
-			emptyChildrenCounter:  this.opts.emptyChildrenCounter
+			emptyChildrenCounter:  this.opts.emptyChildrenCounter,
+			childIndicator:           this.opts.childIndicator,
+			childIndicatorTextFormat: this.opts.childIndicatorTextFormat
 		});
 		col.setSimpleMode(true);
 		col.appendTo(this.elem);
@@ -1433,6 +1513,38 @@ jCVL_ColumnList.prototype.updateItems = function () {
 	});
 }
 
+// Set/Get formats
+// Set* functions update item
+jCVL_ColumnList.prototype.setTextFormat = function (fmt) {
+	jQuery.each(this.cols, function (index, col) {
+		col.setTextFormat(this.opts.textFormat = fmt);
+	});
+}
+
+jCVL_ColumnList.prototype.setChildrenCounterFormat = function (fmt) {
+	jQuery.each(this.cols, function (index, col) {
+		col.setChildrenCounterFormat(this.opts.childrenCounterFormat = fmt);
+	});
+}
+
+jCVL_ColumnList.prototype.setEmptyChildrenCounter = function (bShow) {
+	jQuery.each(this.cols, function (index, col) {
+		col.setEmptyChildrenCounter(this.opts.emptyChildrenCounter = !!bShow);
+	});
+}
+
+// Child indicator
+jCVL_ColumnList.prototype.setChildIndicator = function (bShow) {
+	jQuery.each(this.cols, function (index, col) {
+		col.setChildIndicator(this.opts.childIndicator = !!bShow);
+	});
+}
+
+jCVL_ColumnList.prototype.setChildIndicatorTextFormat = function (fmt) {
+	jQuery.each(this.cols, function (index, col) {
+		col.setChildIndicatorTextFormat(this.opts.childIndicatorTextFormat = fmt);
+	});
+}
 
 // -----------------------------------------------------------------------------
 // Column List View
@@ -1456,7 +1568,9 @@ function jCVL_ColumnListView(opts)
 		leafMode:         false,
 		textFormat:            jCVL_ColumnItemTags.text,
 		childrenCounterFormat: null,
-		emptyChildrenCounter:  false
+		emptyChildrenCounter:  false,
+		childIndicator:           true,
+		childIndicatorTextFormat: null
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -1473,7 +1587,7 @@ function jCVL_ColumnListView(opts)
 	this.list = new jCVL_ColumnList(listOpts);
 	
 	this.jaws = new jCVL_LabelArea({
-		id:             this.opts.id + '-jaws-area',
+		id:             this.opts.id + '-labels-area',
 		unique:         true,
 		paramName:      this.opts.paramName,
 		onDelClick:     function (ev, id, text, value) { that.onLabelDelClick(ev, id, text, value); },
@@ -1742,8 +1856,6 @@ jCVL_ColumnListView.prototype.updateItems = function () {
 }
 
 
-
-
 /* -----------------------------------------------------------------------------
  * jColumnListView
  * 
@@ -1769,7 +1881,9 @@ jQuery.fn.jColumnListView = function (options) {
 		leafMode:         false,
 		textFormat:            jCVL_ColumnItemTags.text,
 		childrenCounterFormat: null,
-		emptyChildrenCounter:  false
+		emptyChildrenCounter:  false,
+		childIndicator:           true,
+		childIndicatorTextFormat: null
 	};
 	var opts = $.extend(defOpts, options);
 

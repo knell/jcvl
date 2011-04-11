@@ -3,21 +3,21 @@
  */
 
 /* Label element */
-.cvl-selected-jaw
+.cvl-selected-label
 {
 	padding: 4px 2px;
 	margin: 2px;
 	background-color: #1F75A8;
 	border: 1px solid #1F75A8;
-	border-radius: 4px;
-	-moz-border-radius: 4px;
+	border-radius:         4px;
+	-moz-border-radius:    4px;
 	-webkit-border-radius: 4px;
-	-o-border-radius: 4px;
-	-ms-border-radius: 4px;
+	-o-border-radius:      4px;
+	-ms-border-radius:     4px;
 	float: left;
 }
 
-.cvl-selected-jaw:hover
+.cvl-selected-label:hover
 {
 	box-shadow:         2px 2px 3px #bbb;
 	-moz-box-shadow:    2px 2px 3px #bbb;
@@ -27,7 +27,7 @@
 }
 
 /* Label Del element (x) */
-.cvl-selected-jaw .cvl-selected-del
+.cvl-selected-label .cvl-selected-del
 {
 	float: left;
 	color: #ffffff;
@@ -44,7 +44,7 @@
 }
 
 /* Label text */
-.cvl-selected-jaw .cvl-selected-name
+.cvl-selected-label .cvl-selected-name
 {
 	float: left;
 	padding: 0 4px 0 2px;
@@ -60,7 +60,7 @@
  */
 
 /* Area box */
-.cvl-jaw-area
+.cvl-label-area
 {
 	border: 1px solid #1F75A8;
 	padding: 2px;
@@ -134,6 +134,44 @@
 	display: block;
 	margin-left: 20px;
 }
+
+.cvl-column-item-indicator
+{
+	float: right;
+	width: 10px;
+	height: 10px;
+	margin: 3px 2px;
+	background-color: #15618E;
+	border-radius:         5px;
+	-moz-border-radius:    5px;
+	-webkit-border-radius: 5px;
+	-o-border-radius:      5px;
+	-ms-border-radius:     5px;
+}
+
+.cvl-column-item-indicator-selected
+{
+	background-color: #fff !important;
+}
+
+/* Example for text indicator
+.cvl-column-item-indicator
+{
+	float: right;
+	width: 10px;
+	height: 16px;
+	margin: 0 2px;
+	color: #15618E;
+	font-size: 10px;
+	line-height: 16px;
+	font-weight: bold;
+}
+
+.cvl-column-item-indicator-selected
+{
+	color: #fff !important;
+}
+*/
 
 /*
  * Column

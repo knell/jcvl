@@ -6,7 +6,6 @@
 	<style type="text/css">
 	body {
 		font-family: Verdana;
-		font-size: 12pt;
 	}
 	</style>
 	<script 
@@ -18,18 +17,18 @@
 	var cl;
 	jQuery(document).ready(function () {
 		cl = jQuery.fn.jColumnListView({
-			id:           'cl1',
-			columnWidth:  150,
-			columnHeight: 200,
-			columnMargin: 8,
-			paramName:    'columnview',
-			columnNum:    4,
-			appendToId:   't1',
-			elementId:    'categories',
-			removeAfter:  false,
-			columnMinWidth: 120,
-			columnMaxWidth: 200,
-			separatorLeftMode: false
+			id:               'cl1',
+			width:            400,
+			columnWidth:      150,
+			columnHeight:     200,
+			columnMargin:     8,
+			paramName:        'columnview',
+			columnNum:        4,
+			appendToId:       't1',
+			elementId:        'categories',
+			removeAfter:      false,
+			columnMinWidth:   120,
+			columnMaxWidth:   200
 		});
 		jQuery.fn.jColumnListView({
 			id:           'cl2',
@@ -42,7 +41,10 @@
 			elementId:    'categories',
 			removeAfter:  true,
 			showLabels:   false,
-			useSplitters: false
+			useSplitters: false,
+			textFormat:           '%cvl-children-counter% %cvl-text%',
+			childrenCountFormat:  '[%cvl-count%]',
+			emptyChildrenCounter: false,
 		});
 		
 		$('#t1-lmode').change(function () {
@@ -54,7 +56,7 @@
 <body>
 
 <p>Column List 1 with splitters</p>
-<div id="t1" style="width: 600px; height: 260px; overflow-x: auto; overflow-y: hidden"></div>
+<div id="t1" style="width: 550px;"></div>
 <p>
 Set Left Mode: <input type="checkbox" id="t1-lmode"/> (Modify only left column)
 </p>
@@ -68,16 +70,16 @@ Set Left Mode: <input type="checkbox" id="t1-lmode"/> (Modify only left column)
 		<ul>
 		<li>Intel
 			<ul>
-			<li>Core 2 Duo</li>
-			<li>Core 2 Quad</li>
-			<li>Core i3</li>
-			<li>Core i5</li>
-			<li>Core i7</li>
-			</ul>
+			<li itemValue="Pentium Group">Pentium 1/2/3/4, Pentium D, Pentium M, etc</li>
+            <li itemValue="Core 2 Group">Core 2 Duo, Core 2 Quad, Core 2 Extreme</li> 
+            <li itemValue="Core i Group">Core i3, Core i5, Core i7</li>
+            </ul>
 		</li>
 		<li>AMD
 			<ul>
-			<li>Sempron</li>
+			<li itemValue="Sempron1">Sempron, Athlon, Others</li>
+			<li itemValue="Sempron2">Sempron</li>
+			<li itemValue="Sempron3">Sempron</li>
 			<li>Athlon</li>
 			<li>Athlon FX</li>
 			<li>Athlon X2</li>
@@ -92,6 +94,7 @@ Set Left Mode: <input type="checkbox" id="t1-lmode"/> (Modify only left column)
 			<li>C7-V</li>
 			</ul>
 		</li>
+		<li itemValue="CPU Leaf">Leaf Item</li>
 		</ul>
 	</li>
 	<li>Motherboards
@@ -128,6 +131,7 @@ Set Left Mode: <input type="checkbox" id="t1-lmode"/> (Modify only left column)
 		<li>Zalman 3</li>
 		</ul>
 	</li>
+	<li itemValue="Root Leaf">Leaf Item</li>
 </ul>
 </body>
 </html>

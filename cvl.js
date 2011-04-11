@@ -545,12 +545,12 @@ jCVL_ColumnItem.prototype.getTextFormat = function () {
 	return this.opts.textFormat;
 }
 
-jCVL_ColumnItem.prototype.setChildrenCountFormat = function (fmt) {
+jCVL_ColumnItem.prototype.setChildrenCounterFormat = function (fmt) {
 	this.opts.childrenCounterFormat = fmt;
 	this.updateItem();
 }
 
-jCVL_ColumnItem.prototype.getChildrenCountFormat = function () {
+jCVL_ColumnItem.prototype.getChildrenCounterFormat = function () {
 	return this.opts.childrenCounterFormat;
 }
 
@@ -913,9 +913,9 @@ jCVL_Column.prototype.setTextFormat = function (fmt) {
 	});
 }
 
-jCVL_Column.prototype.setChildrenCountFormat = function (fmt) {
+jCVL_Column.prototype.setChildrenCounterFormat = function (fmt) {
 	jQuery.each(this.items, function (index, item) {
-		item.setChildrenCountFormat(fmt);
+		item.setChildrenCounterFormat(fmt);
 	});
 }
 

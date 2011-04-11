@@ -41,7 +41,7 @@
  *
  * Parameters v0.4.1
  *   textFormat           - format for column item text. Description of formats see above.
- *   childrenCountFormat  - format of children counter
+ *   childrenCounterFormat  - format of children counter
  *   emptyChildrenCounter - Show or not children counter when item has no children
  *
  * Usage example:
@@ -68,7 +68,7 @@
  *          leafMode:         true
  * // Since version 0.4.1
  *          textFormat:           '%cvl-children-counter% %cvl-text%',
- *          childrenCountFormat:  '[%cvl-count%]',
+ *          childrenCounterFormat:  '[%cvl-count%]',
  *          emptyChildrenCounter: false
  *		});
  *
@@ -334,23 +334,23 @@ jCVL_JawArea.prototype.clear = function () {
 // Item with checkbox for lsit column
 //
 // Parameters:
-//   id                   - ID of item
-//   text                 - label string
-//   value                - element value
-//   checked              - initial state of checkbox
-//   onClick              - handler for whole item
-//   onCheckboxClick      - handler for checkbox only
-//   childrenNum          - number of children (default 0)
-//   textFormat           - format of text of item. Supported tags: 
-//                              %cvl-text%, %cvl-children-counter%.
-//                              Default is "%cvl-text%"
-//   childrenCountFormat  - format of children counter. Supported tags: 
-//                              %cvl-count%.
-//                              Default is null (not used).
-//                              This text will replace %cvl-children-counter% tag in item text.
-//   emptyChildrenCounter - if true children counter will be renderer even if item has no children (counter will be 0).
-//                              Otherwise item will not render children counter.
-//                              Default: false
+//   id                    - ID of item
+//   text                  - label string
+//   value                 - element value
+//   checked               - initial state of checkbox
+//   onClick               - handler for whole item
+//   onCheckboxClick       - handler for checkbox only
+//   childrenNum           - number of children (default 0)
+//   textFormat            - format of text of item. Supported tags: 
+//                               %cvl-text%, %cvl-children-counter%.
+//                               Default is "%cvl-text%"
+//   childrenCounterFormat - format of children counter. Supported tags: 
+//                               %cvl-count%.
+//                               Default is null (not used).
+//                               This text will replace %cvl-children-counter% tag in item text.
+//   emptyChildrenCounter  - if true children counter will be renderer even if item has no children (counter will be 0).
+//                               Otherwise item will not render children counter.
+//                               Default: false
 //
 
 var jCVL_ColumnItemTags = {
@@ -373,10 +373,10 @@ function jCVL_ColumnItem (opts)
 		checked:              false,
 		fullPath:             null,
 		childrenNum:          0,
-		textFormat:           jCVL_ColumnItemTags.childrenCounter + ' ' + jCVL_ColumnItemTags.text, // e.g. '[4] Item Text'
-		childrenCountFormat:  '[' + jCVL_ColumnItemTags.childrenNumber + ']', // e.g. '[4]'
-		emptyChildrenCounter: true,
-		childIndicator:       null
+		textFormat:            jCVL_ColumnItemTags.childrenCounter + ' ' + jCVL_ColumnItemTags.text, // e.g. '[4] Item Text'
+		childrenCounterFormat: '[' + jCVL_ColumnItemTags.childrenNumber + ']', // e.g. '[4]'
+		emptyChildrenCounter:  true,
+		childIndicator:        null
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	
@@ -546,12 +546,12 @@ jCVL_ColumnItem.prototype.getTextFormat = function () {
 }
 
 jCVL_ColumnItem.prototype.setChildrenCountFormat = function (fmt) {
-	this.opts.childrenCountFormat = fmt;
+	this.opts.childrenCounterFormat = fmt;
 	this.updateItem();
 }
 
 jCVL_ColumnItem.prototype.getChildrenCountFormat = function () {
-	return this.opts.childrenCountFormat;
+	return this.opts.childrenCounterFormat;
 }
 
 jCVL_ColumnItem.prototype.setEmptyChildrenCounter = function (bShow) {
@@ -566,7 +566,7 @@ jCVL_ColumnItem.prototype.getEmptyChildrenCounter = function () {
 // Render counter
 jCVL_ColumnItem.prototype._renderChildrenCounter = function () {
 	var cn  = this.opts.childrenNum;
-	var fmt = this.opts.childrenCountFormat;
+	var fmt = this.opts.childrenCounterFormat;
 	var emp = this.opts.emptyChildrenCounter;
 	var str = '';
 	
@@ -618,9 +618,9 @@ function jCVL_Column(opts)
 		onClick:         emptyHandler,
 		onCheckboxClick: emptyHandler,
 		onColumnClick:   emptyHandler,
-		textFormat:           jCVL_ColumnItemTags.text,
-		childrenCountFormat:  null,
-		emptyChildrenCounter: false
+		textFormat:            jCVL_ColumnItemTags.text,
+		childrenCounterFormat: null,
+		emptyChildrenCounter:  false
 	};
 	this.opts            = jQuery.extend(defOpts, opts);
 	this.opts.width      = CVL_AdjustMinMax(this.opts.width, this.opts.minWidth, this.opts.maxWidth);
@@ -670,9 +670,9 @@ jCVL_Column.prototype._createItem = function (index, text, value) {
 		value:       value, 
 		parentCol:   this, 
 		childrenNum: this.data[index].data.length,
-		textFormat:           this.opts.textFormat,
-		childrenCountFormat:  this.opts.childrenCountFormat,
-		emptyChildrenCounter: this.opts.emptyChildrenCounter,
+		textFormat:            this.opts.textFormat,
+		childrenCounterFormat: this.opts.childrenCounterFormat,
+		emptyChildrenCounter:  this.opts.emptyChildrenCounter,
 	});
 	var that = this;
 	item.setOnClick(function (ev, item) { that.onItemClick(ev, index, item); });
@@ -1127,9 +1127,9 @@ function jCVL_ColumnList (opts)
 		splitterLeftMode: false,
 		onClick:          function () {},
 		onCheckboxClick:  function () {},
-		textFormat:           jCVL_ColumnItemTags.text,
-		childrenCountFormat:  null,
-		emptyChildrenCounter: false
+		textFormat:            jCVL_ColumnItemTags.text,
+		childrenCounterFormat: null,
+		emptyChildrenCounter:  false
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	this.cols = [];
@@ -1188,9 +1188,9 @@ jCVL_ColumnList.prototype._createColumns = function () {
 				that.onColumnItemCheckboxClick(ev, colIndex, index, item); }; })(i),
 			onColumnClick: (function (colIndex) { return function (ev) {
 				that.onColumnClick(ev, colIndex); }; })(i),
-			textFormat:           this.opts.textFormat,
-			childrenCountFormat:  this.opts.childrenCountFormat,
-			emptyChildrenCounter: this.opts.emptyChildrenCounter
+			textFormat:            this.opts.textFormat,
+			childrenCounterFormat: this.opts.childrenCounterFormat,
+			emptyChildrenCounter:  this.opts.emptyChildrenCounter
 		});
 		col.setSimpleMode(true);
 		col.appendTo(this.elem);
@@ -1459,9 +1459,9 @@ function jCVL_ColumnListView(opts)
 		removeULAfter:    false,
 		showLabels:       true,
 		leafMode:         false,
-		textFormat:           jCVL_ColumnItemTags.text,
-		childrenCountFormat:  null,
-		emptyChildrenCounter: false
+		textFormat:            jCVL_ColumnItemTags.text,
+		childrenCounterFormat: null,
+		emptyChildrenCounter:  false
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -1772,9 +1772,9 @@ jQuery.fn.jColumnListView = function (options) {
 		showLabels:       true,
 		singleCheck:      false,
 		leafMode:         false,
-		textFormat:           jCVL_ColumnItemTags.text,
-		childrenCountFormat:  null,
-		emptyChildrenCounter: false
+		textFormat:            jCVL_ColumnItemTags.text,
+		childrenCounterFormat: null,
+		emptyChildrenCounter:  false
 	};
 	var opts = $.extend(defOpts, options);
 

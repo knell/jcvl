@@ -1642,13 +1642,11 @@ jCVL_ColumnListView.prototype.setFromElement = function (elem_id, bRemoveListAft
 	var ul = typeof(elem_id) == 'string' ? $('#' + elem_id) : $(elem_id);
 	if (ul.length == 0)
 	{
-		if (console)
-			console.error('jColumnListView: Element with ID "' + elem_id + '" was not found');
+		throw new Error('jColumnListView: Element with ID "' + elem_id + '" was not found');
 	}
 	else if (!ul.is('ul'))
 	{
-		if (console)
-			console.error('jColumnListView: Element with ID "' + elem_id + '" is not <UL> element');
+		throw new Error('jColumnListView: Element with ID "' + elem_id + '" is not <UL> element');
 	}
 	else
 	{

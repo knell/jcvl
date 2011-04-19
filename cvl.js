@@ -44,6 +44,10 @@
  *   childrenCounterFormat  - format of children counter
  *   emptyChildrenCounter - Show or not children counter when item has no children
  *
+ * Parameters v0.4.2
+ *   childIndicator           - Show or not children indicator element
+ *   childIndicatorTextFormat - If defined specifies a format of text on indicator
+ *
  * Usage example:
  * 
  *      jQuery.fn.jColumnListView({
@@ -70,10 +74,13 @@
  *          textFormat:           '%cvl-children-counter% %cvl-text%',
  *          childrenCounterFormat:  '[%cvl-count%]',
  *          emptyChildrenCounter: false
+ * // Since version 0.4.2
+ *          childIndicator:           true,
+ *          childIndicatorTextFormat: '%cvl-count%'
  *		});
  *
  * Author:   Alexander Khizha <khizhaster@gmail.com>
- * Version:  0.4.1
+ * Version:  0.4.2
  * Started:  25.03.2011
  * Modified: 11.04.2011
  * License:  GPL v2.0

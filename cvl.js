@@ -48,6 +48,10 @@
  *   childIndicator           - Show or not children indicator element
  *   childIndicatorTextFormat - If defined specifies a format of text on indicator
  *
+ * Parameters v0.5
+ *   ajaxSource       - object that describes parameters for AJAX request. See usage example below.
+ *
+ *
  * Usage example:
  * 
  *      jQuery.fn.jColumnListView({
@@ -77,12 +81,23 @@
  * // Since version 0.4.2
  *          childIndicator:           true,
  *          childIndicatorTextFormat: '%cvl-count%'
+ * // Since version 0.5.0
+ *          ajaxSource: {
+ *              // You can leave url is empty and just set up. After call setFromURL(url) to set up list.
+ *              url:         null,
+ *              method:      'get',
+ *              dataType:    'html xml',
+ *              // reqObj is a XMLHttpRequest object
+ *              onSuccess:   function (reqObj, respStatus, respData) {},
+ *              onFailure:   function (reqObj, respStatus, errObj) {},
+ *              waiterClass: 'cvl-column-waiter'
+ *          }
  *		});
  *
  * Author:   Alexander Khizha <khizhaster@gmail.com>
- * Version:  0.4.2
+ * Version:  0.5.0
  * Started:  25.03.2011
- * Modified: 11.04.2011
+ * Modified: 02.06.2011
  * License:  GPL v2.0
  */
 
@@ -654,6 +669,47 @@ jCVL_ColumnItem.prototype.updateItem = function () {
 
 
 // -----------------------------------------------------------------------------
+// Column Waiter
+//
+// Waiter element for ajax requests
+//
+// Parameters:
+//   className  - name of CSS class to apply to waiter element
+//
+function jCVL_ColumnWaiter(opts)
+{
+	var defOpts = {
+		className:  'cvl-column-waiter'
+	};
+	this.opts = jQuery.extend(defOpts, opts);
+	this.elem = $('<div>')
+		.attr('class', this.opts.className)
+		// hide by default
+		.css({ 'display': 'none' });
+}
+
+// Returns html element itself
+jCVL_ColumnWaiter.prototype.get = function () {
+	return this.elem;
+}
+
+// Appends element to given one
+jCVL_ColumnWaiter.prototype.appendTo = function (elem) {
+	if ($(elem).length != 0)
+		$(elem).append(this.elem);
+}
+
+// Show/Hide
+jCVL_ColumnWaiter.prototype.show = function () {
+	this.elem.show();
+}
+
+jCVL_ColumnWaiter.prototype.hide = function () {
+	this.elem.hide();
+}
+
+
+// -----------------------------------------------------------------------------
 // Column
 //
 // Parameters:
@@ -678,11 +734,12 @@ function jCVL_Column(opts)
 		onClick:         emptyHandler,
 		onCheckboxClick: emptyHandler,
 		onColumnClick:   emptyHandler,
-		textFormat:            jCVL_ColumnItemTags.text,
-		childrenCounterFormat: null,
-		emptyChildrenCounter:  false,
+		textFormat:               jCVL_ColumnItemTags.text,
+		childrenCounterFormat:    null,
+		emptyChildrenCounter:     false,
 		childIndicator:           true,
-		childIndicatorTextFormat: null
+		childIndicatorTextFormat: null,
+		waiterClassName:          'cvl-column-waiter'
 	};
 	this.opts            = jQuery.extend(defOpts, opts);
 	this.opts.width      = CVL_AdjustMinMax(this.opts.width, this.opts.minWidth, this.opts.maxWidth);
@@ -700,6 +757,7 @@ function jCVL_Column(opts)
 	this.onCheckboxClick = this.opts.onCheckboxClick;
 	this.onColumnClick   = this.opts.onColumnClick;
 	this.simpleMode      = false;
+	this.waiter          = new jCVL_ColumnWaiter({ className: this.opts.waiterClassName });
 	
 	this.elem = $('<div>')
 		.attr('id', this.id)
@@ -710,6 +768,7 @@ function jCVL_Column(opts)
 	this.elem.click(function (ev) {
 		that.doOnColumnClick(ev);
 	});
+	this.waiter.appendTo(this.elem);
 }
 
 // Returns html element itself
@@ -746,7 +805,7 @@ jCVL_Column.prototype._createItem = function (index, text, value) {
 
 // Removes column items. If bTotal is set also clears parent* and data
 jCVL_Column.prototype.clear = function (bTotal) {
-	this.elem.find('div').remove();
+	this.elem.find('div.cvl-column-item').remove();
 	this.items = [];
 	this.curItem = undefined;
 	this.curItemIndex = -1;
@@ -755,6 +814,7 @@ jCVL_Column.prototype.clear = function (bTotal) {
 		this.parentCol = this.parentText = this.parentValue = undefined;
 		this.data  = [];
 	}
+	this.waiter.hide();
 }
 
 // Creates and adds elements from data
@@ -1002,6 +1062,13 @@ jCVL_Column.prototype.setChildIndicatorTextFormat = function (fmt) {
 	});
 }
 
+jCVL_Column.prototype.showWaiter = function () {
+	this.waiter.show();
+}
+
+jCVL_Column.prototype.hideWaiter = function () {
+	this.waiter.hide();
+}
 
 // -----------------------------------------------------------------------------
 // ColumnSplitter
@@ -1204,11 +1271,12 @@ function jCVL_ColumnList (opts)
 		splitterLeftMode: false,
 		onClick:          function () {},
 		onCheckboxClick:  function () {},
-		textFormat:            jCVL_ColumnItemTags.text,
-		childrenCounterFormat: null,
-		emptyChildrenCounter:  false,
+		textFormat:               jCVL_ColumnItemTags.text,
+		childrenCounterFormat:    null,
+		emptyChildrenCounter:     false,
 		childIndicator:           true,
-		childIndicatorTextFormat: null
+		childIndicatorTextFormat: null,
+		waiterClassName:          'cvl-column-waiter'
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	this.cols = [];
@@ -1267,11 +1335,12 @@ jCVL_ColumnList.prototype._createColumns = function () {
 				that.onColumnItemCheckboxClick(ev, colIndex, index, item); }; })(i),
 			onColumnClick: (function (colIndex) { return function (ev) {
 				that.onColumnClick(ev, colIndex); }; })(i),
-			textFormat:            this.opts.textFormat,
-			childrenCounterFormat: this.opts.childrenCounterFormat,
-			emptyChildrenCounter:  this.opts.emptyChildrenCounter,
+			textFormat:               this.opts.textFormat,
+			childrenCounterFormat:    this.opts.childrenCounterFormat,
+			emptyChildrenCounter:     this.opts.emptyChildrenCounter,
 			childIndicator:           this.opts.childIndicator,
-			childIndicatorTextFormat: this.opts.childIndicatorTextFormat
+			childIndicatorTextFormat: this.opts.childIndicatorTextFormat,
+			waiterClassName:          this.opts.waiterClassName
 		});
 		col.setSimpleMode(true);
 		col.appendTo(this.elem);
@@ -1316,7 +1385,15 @@ jCVL_ColumnList.prototype.adjustElements = function () {
 }
 
 jCVL_ColumnList.prototype.clear = function () {
-	jQuery.each(this.cols, function (index, item) { item.clear(); if (index > 0) item.hide(); });
+	var spls = this.spls;
+	jQuery.each(this.cols, function (index, item) { 
+		item.clear(); 
+		if (index > 0) 
+		{
+			item.hide();
+			spls[index].hide();
+		}
+	});
 	this._updateWidth();
 }
 
@@ -1577,7 +1654,15 @@ function jCVL_ColumnListView(opts)
 		childrenCounterFormat: null,
 		emptyChildrenCounter:  false,
 		childIndicator:           true,
-		childIndicatorTextFormat: null
+		childIndicatorTextFormat: null,
+		ajaxSource: {
+			url:         null,
+			method:      'get',
+			dataType:    'html xml',
+			onSuccess:   function (reqObj, respStatus, respData) {},
+			onFailure:   function (reqObj, respStatus, errObj) {},
+			waiterClass: 'cvl-column-waiter'
+		}
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -1591,6 +1676,7 @@ function jCVL_ColumnListView(opts)
 	listOpts.onClick         = function (ev, ci, ii, it) { that.onColumnItemClick(ev, ci, ii, it); };
 	listOpts.onCheckboxClick = function (ev, ci, ii, it) { that.onColumnItemCheckboxClick(ev, ci, ii, it); };
 	listOpts.height          = this.opts.columnHeight;
+	listOpts.waiterClassName = this.opts.ajaxSource.waiterClass;
 	this.list = new jCVL_ColumnList(listOpts);
 	
 	this.jaws = new jCVL_LabelArea({
@@ -1608,7 +1694,9 @@ function jCVL_ColumnListView(opts)
 	if (!this.opts.showLabels)
 		this.jaws.hide();
 	
-	if (this.opts.elementId != '')
+	if (this.opts.ajaxSource.url)
+		this.setFromURL(this.opts.ajaxSource.url);
+	else if (this.opts.elementId != '')
 		this.setFromElement(this.opts.elementId, !!this.opts.removeULAfter);
 }
 
@@ -1637,31 +1725,64 @@ jCVL_ColumnListView.prototype.getColumnList = function () {
 }
 
 jCVL_ColumnListView.prototype._clear = function () {
-	this.list._clear();
+	this.list.clear();
+	this.jaws.clear();
+	this.labels = {};
 }
 
 jCVL_ColumnListView.prototype.setSingleCheck = function (bMode) {
 	this.opts.singleCheck = !!bMode;
 }
 
-// Set up list view from data list stoted in <UL> on page
+// Set up list view from data list stored in <UL> on page
 jCVL_ColumnListView.prototype.setFromElement = function (elem_id, bRemoveListAfter) {
-	var ul = typeof(elem_id) == 'string' ? $('#' + elem_id) : $(elem_id);
+	var ul = this._checkULElement(elem_id);
+	this._clear();
+	var data = this._parseData(ul);
+	this.list.setData(data);
+	if (!!bRemoveListAfter)
+		ul.remove();
+}
+
+// Set up list view from data retrieved from URL
+// 0.5.0 Note: Now only HTML response supported
+jCVL_ColumnListView.prototype.setFromURL = function (in_url) {
+	this._clear();
+	this.list.getColumn(0).showWaiter();
+	var that = this;
+	var ao   = this.opts.ajaxSource;
+	var url  = in_url || ao.url || null;
+	
+	if (url)
+	{
+		$.ajax({
+			type:      ao.method || 'get',
+			url:       url,
+			dataType:  ao.dataType,
+			success:   function (respData, respStatus, reqObj) {
+				that.list.getColumn(0).hideWaiter();
+				that.setFromElement($(respData).children('ul'));
+				// setFromElement() can throw errors so no success callback will be called.
+				ao.onSuccess(reqObj, respStatus, respData);
+			},
+			error:     function (reqObj, respStatus, errObj) {
+				that.list.getColumn(0).hideWaiter();
+				ao.onFailure(reqObj, respStatus, errObj);
+			}
+		});
+	}
+}
+
+jCVL_ColumnListView.prototype._checkULElement = function (elem) {
+	var ul = typeof(elem) == 'string' 
+		? $((elem.charAt(0) == '#' ? '' : '#') + elem) 
+		: $(elem);
 	if (ul.length == 0)
-	{
-		throw new Error('jColumnListView: Element with ID "' + elem_id + '" was not found');
-	}
+		throw new Error('jColumnListView: Element "' + elem + '" was not found');
 	else if (!ul.is('ul'))
-	{
-		throw new Error('jColumnListView: Element with ID "' + elem_id + '" is not <UL> element');
-	}
-	else
-	{
-		var data = this._parseData(ul);
-		this.list.setData(data);
-		if (!!bRemoveListAfter)
-			ul.remove();
-	}
+		throw new Error('jColumnListView: Element with ID "' + elem.attr('id') + '" is not <UL> element');
+	
+	return ul;
 }
 
 // Parses <UL> list and retuns data
@@ -1888,7 +2009,15 @@ jQuery.fn.jColumnListView = function (options) {
 		childrenCounterFormat: null,
 		emptyChildrenCounter:  false,
 		childIndicator:           true,
-		childIndicatorTextFormat: null
+		childIndicatorTextFormat: null,
+		ajaxSource: {
+			url:         null,
+			method:      'get',
+			dataType:    'html xml',
+			onSuccess:   function (reqObj, respStatus, respData) {},
+			onFailure:   function (reqObj, respStatus, errObj) {},
+			waiterClass: 'cvl-column-waiter'
+		}
 	};
 	var opts = $.extend(defOpts, options);
 

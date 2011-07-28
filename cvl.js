@@ -1387,12 +1387,13 @@ jCVL_ColumnList.prototype.adjustElements = function () {
 
 jCVL_ColumnList.prototype.clear = function () {
 	var spls = this.spls;
+	var that = this;
 	jQuery.each(this.cols, function (index, item) { 
 		item.clear(); 
 		if (index > 0) 
 		{
 			item.hide();
-			if (this.opts.useSplitters)
+			if (that.opts.useSplitters)
 				spls[index].hide();
 		}
 	});

@@ -96,10 +96,10 @@
  *		});
  *
  * Author:   Alexander Khizha <khizhaster@gmail.com>
- * Version:  0.5.0
+ * Version:  0.5.1
  * Started:  25.03.2011
- * Modified: 02.06.2011
- * License:  GPL v2.0
+ * Modified: 08.08.2011
+ * License:  BSD
  */
 
 function CVL_AdjustMinMax(val, min, max)

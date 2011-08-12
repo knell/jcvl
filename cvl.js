@@ -1272,6 +1272,8 @@ function jCVL_ColumnList (opts)
 		splitterLeftMode: false,
 		onClick:          function () {},
 		onCheckboxClick:  function () {},
+		onItemChecked:    function () {}, // Passed up to client callbacks
+		onItemUnchecked:  function () {},
 		textFormat:               jCVL_ColumnItemTags.text,
 		childrenCounterFormat:    null,
 		emptyChildrenCounter:     false,
@@ -1537,18 +1539,27 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 		
 		// Call after
 		this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
+		this.opts.onItemChecked(colIndex, itemIndex, item);
 	}
 	else // Uncheck all items in child columns
 	{
 		// Call before
-		this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
+		var err = null;
+		try 
+		{
+			this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
+			this.opts.onItemUnchecked(colIndex, itemIndex, item);
+		}
+		catch(e) { err = e; } // to avoid errors occured in callbacks
 
 		if (item == this.getColumn(colIndex).getSelectedItem())
 			for (var i=colIndex+1; i<this.cols.length; i++)
 				this.cols[i].checkAll(false);
+
+		if (err) // rethrow
+			throw err;
 	}
 }
-
 
 jCVL_ColumnList.prototype.setSplitterLeftMode = function (lMode) {
 	jQuery.each(this.spls, function (index, item) {
@@ -1669,9 +1680,9 @@ function jCVL_ColumnListView(opts)
 		removeULAfter:    false,
 		showLabels:       true,
 		leafMode:         false,
-		textFormat:            jCVL_ColumnItemTags.text,
-		childrenCounterFormat: null,
-		emptyChildrenCounter:  false,
+		textFormat:               jCVL_ColumnItemTags.text,
+		childrenCounterFormat:    null,
+		emptyChildrenCounter:     false,
 		childIndicator:           true,
 		childIndicatorTextFormat: null,
 		ajaxSource: {
@@ -1681,7 +1692,9 @@ function jCVL_ColumnListView(opts)
 			onSuccess:   function (reqObj, respStatus, respData) {},
 			onFailure:   function (reqObj, respStatus, errObj) {},
 			waiterClass: 'cvl-column-waiter'
-		}
+		},
+		onItemChecked:   function (colIndex, itemIndex, item) {},
+		onItemUnchecked: function (colIndex, itemIndex, item) {}
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -2036,7 +2049,9 @@ jQuery.fn.jColumnListView = function (options) {
 			onSuccess:   function (reqObj, respStatus, respData) {},
 			onFailure:   function (reqObj, respStatus, errObj) {},
 			waiterClass: 'cvl-column-waiter'
-		}
+		},
+		onItemChecked:      function (colIndex, itemIndex, item) {},
+		onItemUnchecked:    function (colIndex, itemIndex, item) {}
 	};
 	var opts = $.extend(defOpts, options);
 

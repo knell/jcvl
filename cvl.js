@@ -52,6 +52,9 @@
  * Parameters v0.5
  *   ajaxSource       - object that describes parameters for AJAX request. See usage example below.
  *
+ * Parameters v0.5.2
+ *   onItemChecked    - callback called when item has been checked
+ *   onItemUnchecked  - callback called when item has been unchecked
  *
  * Usage example:
  * 
@@ -93,6 +96,9 @@
  *              onFailure:   function (reqObj, respStatus, errObj) {},
  *              waiterClass: 'cvl-column-waiter'
  *          }
+ * // Since version 0.5.2
+ *          onItemChecked:   function (item) {},
+ *          onItemUnchecked: function (item) {}
  *		});
  *
  * Author:   Alexander Khizha <khizhaster@gmail.com>
@@ -726,6 +732,7 @@ function jCVL_Column(opts)
 
 	var defOpts = {
 		id:         'cvl-column',
+		index:      -1,
 		maxWidth:   250,
 		minWidth:   150,
 		width:      200,
@@ -781,6 +788,10 @@ jCVL_Column.prototype.get = function () {
 jCVL_Column.prototype.appendTo = function (elem) {
 	if ($(elem).length != 0)
 		$(elem).append(this.elem);
+}
+
+jCVL_Column.prototype.getIndex = function () {
+	return this.opts.index;
 }
 
 // Creates new ColumnItem with 'text' label
@@ -1331,6 +1342,7 @@ jCVL_ColumnList.prototype._createColumns = function () {
 			minWidth:  this.opts.columnMinWidth,
 			maxWidth:  this.opts.columnMaxWidth,
 			id:        colId,
+			index:     i,
 			// Bind current i value to colIndex 
 			onClick:  (function (colIndex) { return function (ev, index, item) { 
 				that.onColumnItemClick(ev, colIndex, index, item); }; })(i),
@@ -1539,7 +1551,7 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 		
 		// Call after
 		this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
-		this.opts.onItemChecked(colIndex, itemIndex, item);
+		this.opts.onItemChecked(item);
 	}
 	else // Uncheck all items in child columns
 	{
@@ -1548,7 +1560,7 @@ jCVL_ColumnList.prototype.onColumnItemCheckboxClick = function (ev, colIndex, it
 		try 
 		{
 			this.opts.onCheckboxClick(ev, colIndex, itemIndex, item);
-			this.opts.onItemUnchecked(colIndex, itemIndex, item);
+			this.opts.onItemUnchecked(item);
 		}
 		catch(e) { err = e; } // to avoid errors occured in callbacks
 
@@ -1651,8 +1663,6 @@ jCVL_ColumnList.prototype.getSelectedItems = function (bOnlyLeafs) {
 				return !bOnlyLeafs || !item.hasChildren();
 			}), function (item, ii) {
 			return {
-				columnIndex: ci,
-				itemIndex:   item.getIndex(),
 				item:        item,
 				fullPath:    item.getFullPath()
 			};
@@ -1693,8 +1703,8 @@ function jCVL_ColumnListView(opts)
 			onFailure:   function (reqObj, respStatus, errObj) {},
 			waiterClass: 'cvl-column-waiter'
 		},
-		onItemChecked:   function (colIndex, itemIndex, item) {},
-		onItemUnchecked: function (colIndex, itemIndex, item) {}
+		onItemChecked:   function (item) {},
+		onItemUnchecked: function (item) {}
 	};
 	this.opts = jQuery.extend(defOpts, opts);
 	var that = this;
@@ -2050,8 +2060,8 @@ jQuery.fn.jColumnListView = function (options) {
 			onFailure:   function (reqObj, respStatus, errObj) {},
 			waiterClass: 'cvl-column-waiter'
 		},
-		onItemChecked:      function (colIndex, itemIndex, item) {},
-		onItemUnchecked:    function (colIndex, itemIndex, item) {}
+		onItemChecked:      function (item) {},
+		onItemUnchecked:    function (item) {}
 	};
 	var opts = $.extend(defOpts, options);
 

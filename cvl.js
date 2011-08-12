@@ -392,11 +392,11 @@ function jCVL_ColumnItem (opts)
 		id:                   'cvl-column-item',
 		text:                 'Column Item',
 		value:                '',
+		index:                -1,
 		onClick:              emptyHandler,
 		onCBClick:            emptyHandler,
 		parentCol:            null,
 		checked:              false,
-		fullPath:             null,
 		childrenNum:          0,
 		textFormat:            jCVL_ColumnItemTags.childrenCounter + ' ' + jCVL_ColumnItemTags.text, // e.g. '[4] Item Text'
 		childrenCounterFormat: '[' + jCVL_ColumnItemTags.childrenNumber + ']', // e.g. '[4]'
@@ -490,13 +490,13 @@ jCVL_ColumnItem.prototype.setValue = function (val) {
 	this.opts.value = val;
 }
 
-// Set/Get full path for element (path to root column item)
-jCVL_ColumnItem.prototype.setFullPath = function (path) {
-	this.opts.fullPath = path;
+jCVL_ColumnItem.prototype.getIndex = function () {
+	return this.opts.index;
 }
 
+// Get full path for element (path to root column item)
 jCVL_ColumnItem.prototype.getFullPath = function () {
-	return this.opts.fullPath;
+	return this.getParentColumn().getFullPath(this.opts.index);
 }
 
 // Return true if whole item is selected
@@ -787,14 +787,15 @@ jCVL_Column.prototype.appendTo = function (elem) {
 jCVL_Column.prototype._createItem = function (index, text, value) {
 	var id = this.id + '-item' + this.items.length;
 	var item = new jCVL_ColumnItem({ 
-		id:          id, 
-		text:        text, 
-		value:       value, 
-		parentCol:   this, 
-		childrenNum: this.data[index].data.length,
-		textFormat:            this.opts.textFormat,
-		childrenCounterFormat: this.opts.childrenCounterFormat,
-		emptyChildrenCounter:  this.opts.emptyChildrenCounter,
+		id:            id, 
+		text:          text, 
+		value:         value, 
+		index:         index,
+		parentCol:     this, 
+		childrenNum:   this.data[index].data.length,
+		textFormat:               this.opts.textFormat,
+		childrenCounterFormat:    this.opts.childrenCounterFormat,
+		emptyChildrenCounter:     this.opts.emptyChildrenCounter,
 		childIndicator:           this.opts.childIndicator,
 		childIndicatorTextFormat: this.opts.childIndicatorTextFormat
 	});
@@ -825,7 +826,6 @@ jCVL_Column.prototype._fillItems = function (data) {
 	jQuery.each(data, function (index, d) {
 		var item = that._createItem(index, d.name, d.value);
 		that.items.push(item);
-		item.setFullPath(that.getFullPath(index));
 		item.appendTo(that.elem);
 	});
 }
@@ -1630,6 +1630,22 @@ jCVL_ColumnList.prototype.setChildIndicator = function (bShow) {
 jCVL_ColumnList.prototype.setChildIndicatorTextFormat = function (fmt) {
 	jQuery.each(this.cols, function (index, col) {
 		col.setChildIndicatorTextFormat(this.opts.childIndicatorTextFormat = fmt);
+	});
+}
+
+// Returns list of selected items.
+jCVL_ColumnList.prototype.getSelectedItems = function (bOnlyLeafs) {
+	return jQuery.map(this.cols, function (col, ci) {
+		return jQuery.map(jQuery.grep(col.getCheckedItems(), function (item, index) {
+				return !bOnlyLeafs || !item.hasChildren();
+			}), function (item, ii) {
+			return {
+				columnIndex: ci,
+				itemIndex:   item.getIndex(),
+				item:        item,
+				fullPath:    item.getFullPath()
+			};
+		});
 	});
 }
 

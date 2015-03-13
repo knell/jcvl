@@ -6,8 +6,6 @@ License: BSD
 Description
 Simple Finder-like control that can be used instead of <select> to display hierarchical data in columns view. Supports multiselect, separate selecting and checking for items and has labels area to display selected items. Creates an <input> element for each checked item, so you can grab an array of elements on the server. Uses a separate CSS with class names prefixed with 'cvl-'.
 
-Demo site
-http://knell.ho.ua/jcvl/
 
 Issues and Wishes
 Please, feel free to contact me by e-mail (can be found in .js file) or create an issue in case you found some errors or want some features to be implemented.

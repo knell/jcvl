@@ -5,7 +5,7 @@ Simple Finder-like control that can be used instead of ```<select>``` to display
 Creates an ```<input>``` element for each checked item, so you can grab an array of elements on the server. Uses a separate CSS with class names prefixed with 'cvl-'.
 
 ## Issues and Wishes
-Please, feel free to contact me by e-mail (can be found in .js file) or create an [http://code.google.com/p/jcvl/issues/list issue] in case you found some errors or want some features to be implemented.
+Please, feel free to contact me by e-mail (can be found in .js file) or create an in case you found some errors or want some features to be implemented.
 
 ## History
 ### Version 0.2
@@ -177,52 +177,80 @@ Now leaf items support html tags. Default value for such items will be 'all text
 Added option _checkAllChildren_. When it set to true all children items of currently checked item will be checked.
 
 ## Parameters
+
 |id|ID of control|
-|--|-------------|
-|columnWidth|...|
-|columnHeight|size of column|
-|columnMargin|right margin of column|
-|columnNum|maximum number of columns|
-|paramName|name of form parameter|
-|elementId|ID of ```<UL>``` list to get data from|
-|appendToId|ID of element to append this control|
-|removeULAfter|if true remove ```<UL>``` list from DOM after get data|
-|showLabels|show or not labels area|
+|---|---|
+| columnWidth | ... |
+| columnHeight | size of column |
+| columnMargin | right margin of column |
+| columnNum | maximum number of columns |
+| paramName | name of form parameter |
+| elementId | ID of ```<UL>``` list to get data from |
+| appendToId | ID of element to append this control |
+| removeULAfter | if true remove ```<UL>``` list from DOM after get data |
+| showLabels | show or not labels area |
 
 ### Version 0.2
+
+|id|ID of control|
+|---|---|
 |useSplitters|If true splitters will be used|
 |columnMinWidth|...|
 |columnMaxWidth|Min/Max values for width (used as constraints for splitters)|
 |splitterLeftMode|If true splitter will modify only left column (both columns otherwise)|
 
 ### Version 0.2.4
+
+|id|ID of control|
+|---|---|
 |singleCheck|If true only one item can be checked at one time|
 
 
 ### Version 0.4 (0.3.2)
+
+|id|ID of control|
+|---|---|
 |leafMode|If true only leaf items will be stored as values|
 
 ### Version 0.4.1
+
+|id|ID of control|
+|---|---|
 |textFormat|Format of text of item|
 |childrenCounterFormat|Format of children counter|
 |emptyChildrenCounter|Render or not children counter if item has no children|
 
 ### Version 0.4.2
+
+|id|ID of control|
+|---|---|
 |childIndicator|If true indicator will be visible|
 |childIndicatorTextFormat|Format of text for indicator. Can be ```null``` to not render text|
 
 ### Version 0.5.0
+
+|id|ID of control|
+|---|---|
 |ajaxSource|Object with parameters for AJAX requests|
 
 ### Version 0.5.2
+
+|id|ID of control|
+|---|---|
 |onItemChecked/onItemUnchecked|Callbacks called when item changes check state|
 
 ### Version 0.5.3
+
+|id|ID of control|
+|---|---|
 |ajaxSource.itemUrl|URL to retrieve data for column by user click|
 |ajaxSource.pathSeparator|Separator used to join item path indexes to string|
 |checkAndClick|Enables mode when checks and clicks works together|
 
 ### Version 0.5.6
+
+|id|ID of control|
+|---|---|
 |checkAllChildren|Checks all children of a checked item|
 
 ## Usage example
@@ -287,29 +315,29 @@ jQuery(document).ready(function () {
 ```
 
 ## View of control
-http://i56.tinypic.com/2cf41j.jpg
+![](http://i56.tinypic.com/2cf41j.jpg)
 
 ## With splitters (v0.2)
-http://i55.tinypic.com/2r54v10.jpg
+![](http://i55.tinypic.com/2r54v10.jpg)
 
 ## With commas and values (v0.3.1)
-http://i56.tinypic.com/34674lw.jpg
+![](http://i56.tinypic.com/34674lw.jpg)
 
 ## leafMode enabled (v0.4)
-http://i52.tinypic.com/dgs7bt.jpg
+![](http://i52.tinypic.com/dgs7bt.jpg)
 
 ## Custom item text's formats (v0.4.1)
-http://i53.tinypic.com/29dbw5u.jpg
+![](http://i53.tinypic.com/29dbw5u.jpg)
 
 ## Children Indicator (v0.4.2)
 ### Just element without text
-http://i56.tinypic.com/23lm88z.jpg
+![](http://i56.tinypic.com/23lm88z.jpg)
 
 ### With text
-http://i51.tinypic.com/208h5xf.jpg
+![](http://i51.tinypic.com/208h5xf.jpg)
 
 ### HTML formatting in leaf items (v0.5.4)
-http://i56.tinypic.com/2qc1b2p.jpg
+![](http://i56.tinypic.com/2qc1b2p.jpg)
 
 ## Example of source ```<UL>``` list
 ```

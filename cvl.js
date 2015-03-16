@@ -1,8 +1,7 @@
 /*
  * jColumnListView
  *
- * Documentation: http://code.google.com/p/jcvl
- * Demo:          http://www.knell.ho.com.ua/jcvl/
+ * Documentation: https://github.com/knell/jcvl
  *
  * Creates a column view (like a Mac Finder) from <UL> list. Supports multiselect.
  * Since v0.2 can provide splitters between columns.

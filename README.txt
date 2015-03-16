@@ -1,38 +1,38 @@
-jColumnListView
+##jColumnListView
 
-Author:  Alexander Khizha <khizhaster@gmail.com>
+Author:  Alexander Khizha <[khizhaster@gmail.com]>
 License: BSD
 
-Description
+###Description
 Simple Finder-like control that can be used instead of <select> to display hierarchical data in columns view. Supports multiselect, separate selecting and checking for items and has labels area to display selected items. Creates an <input> element for each checked item, so you can grab an array of elements on the server. Uses a separate CSS with class names prefixed with 'cvl-'.
 
-
-Issues and Wishes
+###Issues and Wishes
 Please, feel free to contact me by e-mail (can be found in .js file) or create an issue in case you found some errors or want some features to be implemented.
 
-Version 0.2
+##History
+###Version 0.2
 Splitters added for column. Now it's possible to set min and max width of columns, enable useSplitters flag and change column width with mouse dragging. Also leftMode is available, in this mode only left column will be modified.
 
-Version 0.2.3
+###Version 0.2.3
 Added function setValues(). It allows to set up checked items with given values. This function will search for items, makes it checked and sets labels.
 
-Version 0.2.4
+###Version 0.2.4
 Implemented single check mode. Set 'singleCheck' parameter to true and only one item can be check at one time.
 
-Version 0.3
+###Version 0.3
 Implemented auto-scroll. It works in two ways:
 
 If you click item with children and new column will not fit view area then view will be scrolled to show new column completely.
 If you click item without children or empty space of column and current column does not fit view area then view will be scrolled to show current column completely.
 Fixed removing of check marks for children items.
 
-Version 0.3.1
+###Version 0.3.1
 Implemented support of values for items. Now control can read 'itemValue' attribute for <li> items in list. See updated example below. If attribute 'itemValue' is not present then text will take as value.
 Removed dependency on comma (,) item's text or value. Now it's possible to set text for item with commas, and for values too. Also, it will be useful for similar items in different categories. Now you can set different values for them.
 Version 0.4 (0.3.2)
 Implemented 'leafMode'. If this mode enabled control will store only leaf elements (that have not any children items). Version 0.3.2 promoted to 0.4 (Today is 04.04 :)).
 
-Version 0.4.1
+###Version 0.4.1
 From version 0.4.1 it's possible to set up format of item's text. There are three parameters to do it.
 
 textFormat. It supports two meta tags: %cvl-text% and %cvl-children-counter%. First tag will be replaced with item's text. Second one will be replaced with children counter, obvious, heh? By default this parameter has value %cvl-text% and item will have only text. But you can add any text that you want, for example: 'Item %cvl-text% has %cvl-children-counter% item(s)'.
@@ -40,6 +40,7 @@ childrenCounterFormat. This string defines a format for children counter. This p
 emptyChildrenCounter. Flag is used when item has no children. If this parameter is true then %cvl-children-counter% tag will be rendered when children number is 0. Otherwise it will be removed. For example, suppose textFormat is '%cvl-children-counter% %cvl-text%' and childrenCounterFormat is '[ %cvl-count% ]' and our item has no children. So, if emptyChildrenCounter is true then you will get '[ 0 ] Item Text' and 'Item Text' otherwise.
 You can change parameters of each column item and of whole column separately. Imagine you have created control and have variable 'cl':
 
+```
 // Single item
 cl.getColumnList().getColumn(0).getItem(2).setChildrenCounterFormat('{%cvl-count%}');
 cl.getColumnList().getColumn(1).getItem(1).setChildrenCounterFormat('=%cvl-count%=');
@@ -50,13 +51,15 @@ cl.getColumnList().getColumn(0).setTextFormat('%cvl-children-counter% %cvl-text%
 cl.getColumnList().getColumn(0).setEmptyChildrenCounter(true);
 cl.getColumnList().getColumn(1).setChildrenCounterFormat('{ %cvl-count% }');
 cl.getColumnList().getColumn(1).setTextFormat('%cvl-text% %cvl-children-counter%');
+```
 And, of course, you can change tags! It stored in global object jCVL_ColumnItemTags and by default it looks like:
-
+```
 var jCVL_ColumnItemTags = {
     'text':             '%cvl-text%',
     'childrenCounter':  '%cvl-children-counter%',
     'childrenNumber':   '%cvl-count%'
 };
+```
 So, you can simply do the following:
 
 jCVL_ColumnItemTags.text = '$my-text-tag$';

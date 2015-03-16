@@ -178,7 +178,7 @@ Added option _checkAllChildren_. When it set to true all children items of curre
 
 ## Parameters
 
-|id|ID of control|
+|id|Description|
 |---|---|
 | columnWidth | ... |
 | columnHeight | size of column |
@@ -192,7 +192,7 @@ Added option _checkAllChildren_. When it set to true all children items of curre
 
 ### Version 0.2
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |useSplitters|If true splitters will be used|
 |columnMinWidth|...|
@@ -201,20 +201,20 @@ Added option _checkAllChildren_. When it set to true all children items of curre
 
 ### Version 0.2.4
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |singleCheck|If true only one item can be checked at one time|
 
 
 ### Version 0.4 (0.3.2)
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |leafMode|If true only leaf items will be stored as values|
 
 ### Version 0.4.1
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |textFormat|Format of text of item|
 |childrenCounterFormat|Format of children counter|
@@ -222,26 +222,26 @@ Added option _checkAllChildren_. When it set to true all children items of curre
 
 ### Version 0.4.2
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |childIndicator|If true indicator will be visible|
 |childIndicatorTextFormat|Format of text for indicator. Can be ```null``` to not render text|
 
 ### Version 0.5.0
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |ajaxSource|Object with parameters for AJAX requests|
 
 ### Version 0.5.2
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |onItemChecked/onItemUnchecked|Callbacks called when item changes check state|
 
 ### Version 0.5.3
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |ajaxSource.itemUrl|URL to retrieve data for column by user click|
 |ajaxSource.pathSeparator|Separator used to join item path indexes to string|
@@ -249,7 +249,7 @@ Added option _checkAllChildren_. When it set to true all children items of curre
 
 ### Version 0.5.6
 
-|id|ID of control|
+|id|Description|
 |---|---|
 |checkAllChildren|Checks all children of a checked item|
 
